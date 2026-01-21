@@ -5,21 +5,24 @@ const inputs = {
   j: document.getElementById("j"),
   u: document.getElementById("u"),
 };
+
+const titleInput = document.getElementById("title");
 const weightInput = document.getElementById("weight");
 const perPortionCheckbox = document.getElementById("perPortion");
 
 const addBtn = document.getElementById("add");
 const clearBtn = document.getElementById("clear");
+
 const tbody = document.getElementById("tbody");
 const sumEl = document.getElementById("sum");
 const hintEl = document.getElementById("hint");
 
-// Presets UI (добавь в index.html)
+// Presets
 const presetSelect = document.getElementById("preset");
 const chooseBtn = document.getElementById("choose");
 
 // ====== Storage ======
-const STORAGE_KEY = "kbju_rows_v1";
+const STORAGE_KEY = "kbju_rows_v2"; // новая версия, чтобы не конфликтовать со старой
 let rows = loadRows();
 render();
 
@@ -31,35 +34,41 @@ initPresets();
 addBtn.addEventListener("click", () => {
   hint("");
 
-const perPortion = perPortionCheckbox.checked;
+  const label = (titleInput?.value || "").trim();
+  const perPortion = !!perPortionCheckbox?.checked;
 
-let weight = 0;
-if (!perPortion) {
-  const weightRaw = (weightInput.value || "").trim();
-  weight = parseInt(weightRaw, 10);
+  let weight = null;
+  if (!perPortion) {
+    const weightRaw = (weightInput.value || "").trim();
+    weight = parseInt(weightRaw, 10);
 
-  if (!isValidWeight(weightRaw, weight)) {
-    hint("Вес: целое положительное число, максимум 4 цифры (например 250).");
-    return;
+    if (!isValidWeight(weightRaw, weight)) {
+      hint("Вес: целое положительное число, максимум 4 цифры (например 250).");
+      return;
+    }
   }
-}
 
-  const per100 = {};
+  const values = {};
   for (const key of ["k", "b", "j", "u"]) {
     const raw = normalizeNumber(inputs[key].value);
+
     if (raw === "") {
-      hint("КБЖУ/100г: заполните все 4 поля.");
+      hint("КБЖУ: заполните все 4 поля.");
       return;
     }
+
     const value = parseFloat(raw);
-    if (!isValidMacro(raw, value)) {
-      hint("КБЖУ/100г: только положительные, до 4 цифр целой части и 1 знак после точки (например 1234.5).");
+
+    // Для ручного ввода оставляем строго > 0 как ты просил изначально
+    if (!isValidMacroStrict(raw, value)) {
+      hint("КБЖУ: только положительные числа, до 4 цифр целой части и 1 знак после точки (например 1234.5).");
       return;
     }
-    per100[key] = value;
+
+    values[key] = value;
   }
 
-  addRowFromValues(per100, weight);
+  addRow(values, weight, label, perPortion);
 });
 
 clearBtn.addEventListener("click", () => {
@@ -81,72 +90,106 @@ if (chooseBtn && presetSelect) {
 
     const p = presets[idx];
 
-    // Заполним поля формы (удобно, чтобы видно было откуда взялось)
+    // Заполним поля, чтобы было видно, что выбрано
     inputs.k.value = fmt1(p.k);
     inputs.b.value = fmt1(p.b);
     inputs.j.value = fmt1(p.j);
     inputs.u.value = fmt1(p.u);
-    weightInput.value = String(p.weight);
 
-    // И сразу добавим строку в таблицу
-    addRowFromValues({ k: p.k, b: p.b, j: p.j, u: p.u }, p.weight);
+    // Название подставим
+    if (titleInput) titleInput.value = p.name;
+
+    const perPortion = !!perPortionCheckbox?.checked;
+
+    if (perPortion) {
+      // На порцию: вес не нужен
+      addRow({ k: p.k, b: p.b, j: p.j, u: p.u }, null, p.name, true);
+    } else {
+      // По весу: берём вес из пресета (и покажем его в инпуте)
+      weightInput.value = String(p.weight);
+      addRow({ k: p.k, b: p.b, j: p.j, u: p.u }, p.weight, p.name, false);
+    }
   });
 }
 
 // ====== Core ======
-function addRowFromValues(per100, weight) {
-  const perPortion = perPortionCheckbox.checked;
+function addRow(values, weight, label = "", perPortion = false) {
+  const safeLabel = String(label || "").trim();
 
   const res = perPortion
     ? {
+        label: safeLabel,
+        perPortion: true,
         weight: "—",
-        k: round1(per100.k),
-        b: round1(per100.b),
-        j: round1(per100.j),
-        u: round1(per100.u),
+        k: round1(values.k),
+        b: round1(values.b),
+        j: round1(values.j),
+        u: round1(values.u),
       }
     : {
-        weight,
-        k: round1((per100.k * weight) / 100),
-        b: round1((per100.b * weight) / 100),
-        j: round1((per100.j * weight) / 100),
-        u: round1((per100.u * weight) / 100),
+        label: safeLabel,
+        perPortion: false,
+        weight: weight,
+        k: round1((values.k * weight) / 100),
+        b: round1((values.b * weight) / 100),
+        j: round1((values.j * weight) / 100),
+        u: round1((values.u * weight) / 100),
       };
 
   rows.push(res);
   saveRows();
   render();
 }
+
 // ====== Render ======
 function render() {
   tbody.innerHTML = "";
 
   rows.forEach((r, idx) => {
+    const firstCol = (r.label && r.label.trim()) ? escapeHtml(r.label.trim()) : String(idx + 1);
+    const w = (r.weight === "—") ? "—" : String(r.weight);
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td data-label="#">${idx + 1}</td>
-      <td data-label="Вес, г">${r.weight}</td>
+      <td data-label="#">${firstCol}</td>
+      <td data-label="Вес, г">${escapeHtml(w)}</td>
       <td data-label="Ккал">${fmt1(r.k)}</td>
       <td data-label="Б">${fmt1(r.b)}</td>
       <td data-label="Ж">${fmt1(r.j)}</td>
       <td data-label="У">${fmt1(r.u)}</td>
       <td class="action" data-label="">
-      <button class="icon-btn" data-del="${idx}" title="Удалить">Удалить</button>
+        <button class="icon-btn" data-repeat="${idx}" title="Повторить">Повторить</button>
+        <button class="icon-btn" data-del="${idx}" title="Удалить">Удалить</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 
+  // Delete
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const i = parseInt(btn.getAttribute("data-del"), 10);
-      if (!Number.isFinite(i)) return;
+      if (!Number.isFinite(i) || !rows[i]) return;
+
       rows.splice(i, 1);
       saveRows();
       render();
     });
   });
 
+  // Repeat
+  tbody.querySelectorAll("button[data-repeat]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.getAttribute("data-repeat"), 10);
+      if (!Number.isFinite(i) || !rows[i]) return;
+
+      rows.push({ ...rows[i] }); // копия строки
+      saveRows();
+      render();
+    });
+  });
+
+  // Totals
   const total = rows.reduce(
     (acc, r) => {
       acc.k += safeNum(r.k);
@@ -167,12 +210,12 @@ async function initPresets() {
 
   presetSelect.innerHTML = `<option value="">Загрузка…</option>`;
   try {
-    // файл лежит рядом с index.html
     const resp = await fetch("./products.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
 
     presets = sanitizePresets(data);
+
     if (presets.length === 0) {
       presetSelect.innerHTML = `<option value="">(Список пуст)</option>`;
       return;
@@ -184,7 +227,7 @@ async function initPresets() {
   } catch (e) {
     presets = [];
     presetSelect.innerHTML = `<option value="">(Не удалось загрузить список)</option>`;
-    hint("Не смог загрузить products.json. Проверь, что файл есть в репозитории и лежит рядом с index.html.");
+    hint("Не смог загрузить products.json. Проверь, что файл лежит рядом с index.html и попал в репозиторий.");
   }
 }
 
@@ -201,22 +244,11 @@ function sanitizePresets(data) {
     }))
     .filter((p) => {
       if (!p.name) return false;
-      // Здесь допускаю 0.0 для макросов (иногда реально 0)
-      // но ты изначально хотел строго положительные — если хочешь строго, поменяем на >0
+      // Для пресетов допускаем 0.0 (например углеводы 0)
       if (![p.k, p.b, p.j, p.u].every((n) => Number.isFinite(n) && n >= 0)) return false;
       if (!(Number.isFinite(p.weight) && p.weight > 0 && p.weight <= 9999)) return false;
       return true;
     });
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  }[c]));
 }
 
 // ====== Helpers ======
@@ -224,26 +256,45 @@ function normalizeNumber(str) {
   if (str == null) return "";
   return String(str).trim().replace(",", ".");
 }
+
 function safeNum(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : 0;
 }
-function isValidMacro(rawStr, value) {
+
+// Строго положительные (для ручного ввода)
+function isValidMacroStrict(rawStr, value) {
   if (!Number.isFinite(value) || value <= 0) return false;
   return /^\d{1,4}(\.\d)?$/.test(rawStr);
 }
+
+// Вес: строго положительное целое до 4 цифр
 function isValidWeight(rawStr, value) {
   if (!Number.isFinite(value) || value <= 0) return false;
   return /^\d{1,4}$/.test(rawStr);
 }
+
 function round1(num) {
-  return Math.round(num * 10) / 10;
+  return Math.round(safeNum(num) * 10) / 10;
 }
+
 function fmt1(num) {
   return (Math.round(safeNum(num) * 10) / 10).toFixed(1);
 }
+
 function hint(text) {
   hintEl.textContent = text || "";
+}
+
+function escapeHtml(s) {
+  const str = String(s);
+  return str.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[c]));
 }
 
 // ====== LocalStorage ======
@@ -254,21 +305,32 @@ function saveRows() {
     hint("Не удалось сохранить данные (localStorage недоступен).");
   }
 }
+
 function loadRows() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const data = JSON.parse(raw);
     if (!Array.isArray(data)) return [];
+
     return data
       .map((r) => ({
-        weight: parseInt(r.weight, 10),
+        label: String(r.label ?? ""),
+        perPortion: !!r.perPortion,
+        weight: (r.weight === "—") ? "—" : parseInt(r.weight, 10),
         k: Number(r.k),
         b: Number(r.b),
         j: Number(r.j),
         u: Number(r.u),
       }))
-      .filter((r) => Number.isFinite(r.weight) && r.weight > 0);
+      .filter((r) => {
+        // макросы должны быть числами
+        if (![r.k, r.b, r.j, r.u].every((n) => Number.isFinite(n))) return false;
+        // если порция — вес может быть "—"
+        if (r.weight === "—") return true;
+        // иначе вес валидируем как число
+        return Number.isFinite(r.weight) && r.weight > 0;
+      });
   } catch {
     return [];
   }

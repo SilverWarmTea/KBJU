@@ -11,7 +11,8 @@
     <h1>КБЖУ по весу</h1>
 
     <div class="card">
-      <div class="inputs">
+      <div class="inputs"> 
+        <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40">
         <input type="number" step="0.1" min="0" placeholder="Ккал / 100г" id="k">
         <input type="number" step="0.1" min="0" placeholder="Белки / 100г" id="b">
         <input type="number" step="0.1" min="0" placeholder="Жиры / 100г" id="j">
@@ -27,7 +28,7 @@
       <div class="row">
         <label>
         <input type="checkbox" id="perPortion">
-          На порцию
+        <span>На порцию</span>
         </label>
       </div>
 
@@ -42,6 +43,10 @@
 
     <div class="card">
       <h2>Результаты</h2>
+        <div class="totals">
+          <div>Итого:</div>
+          <div id="sum">К: 0.0 | Б: 0.0 | Ж: 0.0 | У: 0.0</div>
+        </div>
 
       <div class="table-wrap">
         <table>
@@ -60,10 +65,7 @@
         </table>
       </div>
 
-      <div class="totals">
-        <div>Итого:</div>
-        <div id="sum">К: 0.0 | Б: 0.0 | Ж: 0.0 | У: 0.0</div>
-      </div>
+      
     </div>
   </div>
 
