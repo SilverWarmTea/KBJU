@@ -124,13 +124,15 @@ function render() {
   rows.forEach((r, idx) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${idx + 1}</td>
-      <td>${r.weight}</td>
-      <td>${fmt1(r.k)}</td>
-      <td>${fmt1(r.b)}</td>
-      <td>${fmt1(r.j)}</td>
-      <td>${fmt1(r.u)}</td>
-      <td><button class="icon-btn" data-del="${idx}" title="Удалить">✕</button></td>
+      <td data-label="#">${idx + 1}</td>
+      <td data-label="Вес, г">${r.weight}</td>
+      <td data-label="Ккал">${fmt1(r.k)}</td>
+      <td data-label="Б">${fmt1(r.b)}</td>
+      <td data-label="Ж">${fmt1(r.j)}</td>
+      <td data-label="У">${fmt1(r.u)}</td>
+      <td class="action" data-label="">
+      <button class="icon-btn" data-del="${idx}" title="Удалить">Удалить</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
