@@ -6,6 +6,7 @@ const inputs = {
   u: document.getElementById("u"),
 };
 const weightInput = document.getElementById("weight");
+const perPortionCheckbox = document.getElementById("perPortion");
 
 const addBtn = document.getElementById("add");
 const clearBtn = document.getElementById("clear");
@@ -30,13 +31,18 @@ initPresets();
 addBtn.addEventListener("click", () => {
   hint("");
 
+const perPortion = perPortionCheckbox.checked;
+
+let weight = 0;
+if (!perPortion) {
   const weightRaw = (weightInput.value || "").trim();
-  const weight = parseInt(weightRaw, 10);
+  weight = parseInt(weightRaw, 10);
 
   if (!isValidWeight(weightRaw, weight)) {
     hint("Вес: целое положительное число, максимум 4 цифры (например 250).");
     return;
   }
+}
 
   const per100 = {};
   for (const key of ["k", "b", "j", "u"]) {
@@ -89,21 +95,28 @@ if (chooseBtn && presetSelect) {
 
 // ====== Core ======
 function addRowFromValues(per100, weight) {
-  const res = {
-    weight,
-    k: round1((per100.k * weight) / 100),
-    b: round1((per100.b * weight) / 100),
-    j: round1((per100.j * weight) / 100),
-    u: round1((per100.u * weight) / 100),
-    // опционально можно хранить name (если хочешь потом показывать в таблице)
-    // name: per100.name || ""
-  };
+  const perPortion = perPortionCheckbox.checked;
+
+  const res = perPortion
+    ? {
+        weight: "—",
+        k: round1(per100.k),
+        b: round1(per100.b),
+        j: round1(per100.j),
+        u: round1(per100.u),
+      }
+    : {
+        weight,
+        k: round1((per100.k * weight) / 100),
+        b: round1((per100.b * weight) / 100),
+        j: round1((per100.j * weight) / 100),
+        u: round1((per100.u * weight) / 100),
+      };
 
   rows.push(res);
   saveRows();
   render();
 }
-
 // ====== Render ======
 function render() {
   tbody.innerHTML = "";
