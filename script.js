@@ -13,12 +13,18 @@ const tbody = document.getElementById("tbody");
 const sumEl = document.getElementById("sum");
 const hintEl = document.getElementById("hint");
 
+// Presets UI (добавь в index.html)
+const presetSelect = document.getElementById("preset");
+const chooseBtn = document.getElementById("choose");
+
 // ====== Storage ======
 const STORAGE_KEY = "kbju_rows_v1";
-
-// rows: [{ weight, k, b, j, u }]
 let rows = loadRows();
 render();
+
+// ====== Presets ======
+let presets = []; // [{name,k,b,j,u,weight}]
+initPresets();
 
 // ====== Events ======
 addBtn.addEventListener("click", () => {
@@ -35,34 +41,19 @@ addBtn.addEventListener("click", () => {
   const per100 = {};
   for (const key of ["k", "b", "j", "u"]) {
     const raw = normalizeNumber(inputs[key].value);
-
-    // пусто / не число
-    if (raw === "" || raw === null) {
+    if (raw === "") {
       hint("КБЖУ/100г: заполните все 4 поля.");
       return;
     }
-
     const value = parseFloat(raw);
-
     if (!isValidMacro(raw, value)) {
       hint("КБЖУ/100г: только положительные, до 4 цифр целой части и 1 знак после точки (например 1234.5).");
       return;
     }
-
     per100[key] = value;
   }
 
-  const res = {
-    weight,
-    k: round1((per100.k * weight) / 100),
-    b: round1((per100.b * weight) / 100),
-    j: round1((per100.j * weight) / 100),
-    u: round1((per100.u * weight) / 100),
-  };
-
-  rows.push(res);
-  saveRows();
-  render();
+  addRowFromValues(per100, weight);
 });
 
 clearBtn.addEventListener("click", () => {
@@ -71,6 +62,47 @@ clearBtn.addEventListener("click", () => {
   render();
   hint("Очищено.");
 });
+
+if (chooseBtn && presetSelect) {
+  chooseBtn.addEventListener("click", () => {
+    hint("");
+
+    const idx = parseInt(presetSelect.value, 10);
+    if (!Number.isFinite(idx) || !presets[idx]) {
+      hint("Выберите продукт из списка.");
+      return;
+    }
+
+    const p = presets[idx];
+
+    // Заполним поля формы (удобно, чтобы видно было откуда взялось)
+    inputs.k.value = fmt1(p.k);
+    inputs.b.value = fmt1(p.b);
+    inputs.j.value = fmt1(p.j);
+    inputs.u.value = fmt1(p.u);
+    weightInput.value = String(p.weight);
+
+    // И сразу добавим строку в таблицу
+    addRowFromValues({ k: p.k, b: p.b, j: p.j, u: p.u }, p.weight);
+  });
+}
+
+// ====== Core ======
+function addRowFromValues(per100, weight) {
+  const res = {
+    weight,
+    k: round1((per100.k * weight) / 100),
+    b: round1((per100.b * weight) / 100),
+    j: round1((per100.j * weight) / 100),
+    u: round1((per100.u * weight) / 100),
+    // опционально можно хранить name (если хочешь потом показывать в таблице)
+    // name: per100.name || ""
+  };
+
+  rows.push(res);
+  saveRows();
+  render();
+}
 
 // ====== Render ======
 function render() {
@@ -90,19 +122,16 @@ function render() {
     tbody.appendChild(tr);
   });
 
-  // Удаление строки
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const i = parseInt(btn.getAttribute("data-del"), 10);
       if (!Number.isFinite(i)) return;
-
       rows.splice(i, 1);
       saveRows();
       render();
     });
   });
 
-  // Сумма
   const total = rows.reduce(
     (acc, r) => {
       acc.k += safeNum(r.k);
@@ -117,44 +146,87 @@ function render() {
   sumEl.textContent = `К: ${fmt1(total.k)} | Б: ${fmt1(total.b)} | Ж: ${fmt1(total.j)} | У: ${fmt1(total.u)}`;
 }
 
+// ====== Presets loading ======
+async function initPresets() {
+  if (!presetSelect) return;
+
+  presetSelect.innerHTML = `<option value="">Загрузка…</option>`;
+  try {
+    // файл лежит рядом с index.html
+    const resp = await fetch("./products.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    presets = sanitizePresets(data);
+    if (presets.length === 0) {
+      presetSelect.innerHTML = `<option value="">(Список пуст)</option>`;
+      return;
+    }
+
+    presetSelect.innerHTML = presets
+      .map((p, i) => `<option value="${i}">${escapeHtml(p.name)}</option>`)
+      .join("");
+  } catch (e) {
+    presets = [];
+    presetSelect.innerHTML = `<option value="">(Не удалось загрузить список)</option>`;
+    hint("Не смог загрузить products.json. Проверь, что файл есть в репозитории и лежит рядом с index.html.");
+  }
+}
+
+function sanitizePresets(data) {
+  if (!Array.isArray(data)) return [];
+  return data
+    .map((x) => ({
+      name: String(x.name ?? "").trim(),
+      k: Number(x.k),
+      b: Number(x.b),
+      j: Number(x.j),
+      u: Number(x.u),
+      weight: parseInt(x.weight, 10),
+    }))
+    .filter((p) => {
+      if (!p.name) return false;
+      // Здесь допускаю 0.0 для макросов (иногда реально 0)
+      // но ты изначально хотел строго положительные — если хочешь строго, поменяем на >0
+      if (![p.k, p.b, p.j, p.u].every((n) => Number.isFinite(n) && n >= 0)) return false;
+      if (!(Number.isFinite(p.weight) && p.weight > 0 && p.weight <= 9999)) return false;
+      return true;
+    });
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[c]));
+}
+
 // ====== Helpers ======
 function normalizeNumber(str) {
   if (str == null) return "";
   return String(str).trim().replace(",", ".");
 }
-
 function safeNum(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : 0;
 }
-
 function isValidMacro(rawStr, value) {
-  // строго положительные
   if (!Number.isFinite(value) || value <= 0) return false;
-
-  // до 4 цифр целой части и 1 знак после точки (или без дробной)
-  // rawStr уже нормализован (точка)
-  // примеры OK: 1, 12, 1234, 0.1, 12.3, 1234.5
-  // НЕ OK: 12345, 1.23, -1, 0, 00.1 (строгость можно ослабить при желании)
   return /^\d{1,4}(\.\d)?$/.test(rawStr);
 }
-
 function isValidWeight(rawStr, value) {
-  // строго положительный вес
   if (!Number.isFinite(value) || value <= 0) return false;
-
-  // целое до 4 цифр
   return /^\d{1,4}$/.test(rawStr);
 }
-
 function round1(num) {
   return Math.round(num * 10) / 10;
 }
-
 function fmt1(num) {
   return (Math.round(safeNum(num) * 10) / 10).toFixed(1);
 }
-
 function hint(text) {
   hintEl.textContent = text || "";
 }
@@ -163,20 +235,16 @@ function hint(text) {
 function saveRows() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
-  } catch (e) {
-    // Если storage переполнен/запрещён — хотя для твоих объёмов это почти нереально
+  } catch {
     hint("Не удалось сохранить данные (localStorage недоступен).");
   }
 }
-
 function loadRows() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const data = JSON.parse(raw);
-
     if (!Array.isArray(data)) return [];
-    // лёгкая санитария данных
     return data
       .map((r) => ({
         weight: parseInt(r.weight, 10),
