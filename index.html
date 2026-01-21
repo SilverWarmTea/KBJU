@@ -20,17 +20,19 @@
       </div>
 
       <div class="row">
-        <input type="number" min="0" step="1" placeholder="Вес (г)" id="weight">
         <button id="add">Добавить</button>
         <button id="clear" class="danger">Очистить</button>
       </div>
 
-      <div class="row">
-        <label>
-        <input type="checkbox" id="perPortion">
-        <span>На порцию</span>
+      <div class="row weight-row">
+        <input type="number" min="0" step="1" placeholder="Вес (г)" id="weight">
+
+        <label class="checkline inrow">
+          <input type="checkbox" id="perPortion">
+          <span>На порцию</span>
         </label>
       </div>
+
 
       <div class="row">
         <select id="preset" aria-label="Выбор продукта"></select>

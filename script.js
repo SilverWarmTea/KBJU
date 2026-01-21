@@ -10,6 +10,15 @@ const titleInput = document.getElementById("title");
 const weightInput = document.getElementById("weight");
 const perPortionCheckbox = document.getElementById("perPortion");
 
+function syncWeightDisabled() {
+  const perPortion = perPortionCheckbox.checked;
+  weightInput.disabled = perPortion;
+  if (perPortion) weightInput.value = "";
+}
+perPortionCheckbox.addEventListener("change", syncWeightDisabled);
+syncWeightDisabled();
+
+
 const addBtn = document.getElementById("add");
 const clearBtn = document.getElementById("clear");
 
