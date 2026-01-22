@@ -278,7 +278,7 @@ function isValidMacroStrict(rawStr, value) {
 
   // rawStr уже нормализован (запятая -> точка)
   // разрешаем: 0, 0.1, 12, 12.3, 1234, 1234.5
-  return /^(?:0|[1-9]\d{0,3})(?:\.\d)?$/.test(rawStr);
+  return /^(?:0|[1-9]\d{0,3})(?:\.\d)?$/.test(rawStr);}
 
 // Вес: строго положительное целое до 4 цифр
 function isValidWeight(rawStr, value) {
