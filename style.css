@@ -227,3 +227,45 @@ tbody tr:hover { background: rgba(255,255,255,0.04); }
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Вес + На порцию: одинаковая высота */
+.weight-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: stretch; /* важно: растягиваем элементы одинаково */
+}
+
+/* фиксируем общую высоту ряда */
+.weight-row > input,
+.weight-row > label{
+  height: 48px;          /* можешь поставить 50px если хочешь "пухлее" */
+}
+
+/* label делаем как "контейнер", чтобы содержимое ровно центровалось */
+.checkline.inrow{
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 12px;       /* вместо 10px со всех сторон */
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* сам чекбокс тоже чуть стабильнее по виду */
+.checkline.inrow input[type="checkbox"]{
+  width: 20px;
+  height: 20px;
+  margin: 0;            /* иногда браузер добавляет margin */
+}
+
+/* текст не должен "раздувать" высоту */
+.checkline.inrow span{
+  line-height: 1;
+  white-space: nowrap;
+}
