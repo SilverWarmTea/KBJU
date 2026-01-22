@@ -104,6 +104,7 @@ tbody tr:hover { background: rgba(255,255,255,0.04); }
   padding-top: 10px;
   border-top: 1px solid #2a2a2a;
   font-size: 16px;
+  margin-bottom: 12px;
 }
 
 /* ===== Mobile layout ===== */
@@ -270,10 +271,8 @@ tbody tr:hover { background: rgba(255,255,255,0.04); }
   white-space: nowrap;
 }
 
-.total-title {
-  margin-bottom: 6px;   /* отступ между "Итого:" и строкой КБЖУ */
-}
-
-.total-values {
-  margin-top: 6px;      /* можно и так, чтобы точно была пустая строка */
+/* ПК: название — отдельная строка на всю ширину */
+#title{
+  width: 100%;
+  margin-bottom: 10px;
 }

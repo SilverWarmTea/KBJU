@@ -10,9 +10,10 @@
   <div class="app">
     <h1>КБЖУ по весу</h1>
 
+    <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40">
+
     <div class="card">
-      <div class="inputs"> 
-        <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40">
+      <div class="inputs">    
         <input type="number" step="0.1" min="0" placeholder="Ккал / 100г" id="k">
         <input type="number" step="0.1" min="0" placeholder="Белки / 100г" id="b">
         <input type="number" step="0.1" min="0" placeholder="Жиры / 100г" id="j">
@@ -46,8 +47,7 @@
     <div class="card">
       <h2>Результаты</h2>
         <div class="totals">
-          <div class="total-title">Итого:</div>
-          <div class="total-values" id="sum">К: 0.0 | Б: 0.0 | Ж: 0.0 | У: 0.0</div>
+          <div id="sum">К: 0.0 | Б: 0.0 | Ж: 0.0 | У: 0.0</div>
         </div>
 
       <div class="table-wrap">

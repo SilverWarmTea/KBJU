@@ -273,9 +273,12 @@ function safeNum(x) {
 
 // Строго положительные (для ручного ввода)
 function isValidMacroStrict(rawStr, value) {
-  if (!Number.isFinite(value) || value <= 0) return false;
-  return /^\d{1,4}(\.\d)?$/.test(rawStr);
-}
+  // допускаем 0 и 0.1+
+  if (!Number.isFinite(value) || value < 0) return false;
+
+  // rawStr уже нормализован (запятая -> точка)
+  // разрешаем: 0, 0.1, 12, 12.3, 1234, 1234.5
+  return /^(?:0|[1-9]\d{0,3})(?:\.\d)?$/.test(rawStr);
 
 // Вес: строго положительное целое до 4 цифр
 function isValidWeight(rawStr, value) {
