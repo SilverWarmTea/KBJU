@@ -24,20 +24,8 @@ h2 { font-size: 18px; margin: 0 0 10px; }
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }
 
-.inputs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-input, button {
+/* Controls */
+input, select, button {
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #333;
@@ -58,6 +46,11 @@ button.danger {
   border-color: #5a2a2a;
 }
 
+#title {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
 .hint {
   margin: 10px 0 0;
   min-height: 18px;
@@ -65,6 +58,71 @@ button.danger {
   font-size: 13px;
 }
 
+/* Layout blocks */
+.inputs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Weight + portion (desktop + mobile) */
+.weight-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.weight-row > input,
+.weight-row > label{
+  height: 48px;
+}
+
+.checkline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.checkline input[type="checkbox"]{
+  width:20px;
+  height:20px;
+}
+
+.checkline.inrow{
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 12px;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.checkline.inrow input[type="checkbox"]{
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.checkline.inrow span{
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Table (desktop) */
 .table-wrap {
   overflow-x: auto;
   border: 1px solid #2a2a2a;
@@ -96,53 +154,46 @@ tbody tr:hover { background: rgba(255,255,255,0.04); }
   background: #222;
 }
 
+/* Totals */
 .totals {
+  position: sticky;
+  top: 0;
+  background: #1b1b1b;
+  z-index: 2;
+
   display: flex;
   justify-content: space-between;
   gap: 12px;
+
   margin-top: 10px;
+  margin-bottom: 12px;
   padding-top: 10px;
   border-top: 1px solid #2a2a2a;
   font-size: 16px;
-  margin-bottom: 12px;
 }
 
 /* ===== Mobile layout ===== */
 @media (max-width: 520px) {
-  .inputs {
-    grid-template-columns: 1fr; /* все 4 поля строго в колонку */
-  }
+  .inputs { grid-template-columns: 1fr; }
 
-  .row {
-    grid-template-columns: 1fr; /* вес, кнопки, селект — по одному в ряд */
-  }
+  .row { grid-template-columns: 1fr; }
 
   .row button,
   .row select,
-  .row input {
-    width: 100%;
-  }
+  .row input { width: 100%; }
 
-  /* Чуть удобнее тапы */
-  input, button, select {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 520px) {
+  /* Mobile "cards" view for results */
   .table-wrap {
-    overflow: visible;          /* больше не заставляем скроллить вбок */
+    overflow: visible;
     border: none;
   }
 
   table {
-    min-width: 0 !important;    /* убираем твою min-width: 520px */
+    min-width: 0;
     width: 100%;
   }
 
-  thead {
-    display: none;              /* прячем шапку */
-  }
+  thead { display: none; }
 
   tbody tr {
     display: grid;
@@ -164,115 +215,14 @@ tbody tr:hover { background: rgba(255,255,255,0.04); }
     text-align: left;
   }
 
-  /* подписи слева, значения справа */
   tbody td::before {
     content: attr(data-label);
     color: #bbb;
   }
 
-  /* Кнопку удаления — на всю ширину внизу карточки */
   tbody td.action {
     grid-column: 1 / -1;
     justify-content: flex-end;
     padding-top: 6px;
   }
-}
-
-.checkline{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-top:10px;
-}
-
-.checkline input[type="checkbox"]{
-  width:20px;
-  height:20px;
-}
-
-.totals{
-  position: sticky;
-  top: 0;
-  background: #1b1b1b;
-  z-index: 2;
-}
-
-#title { margin-bottom: 8px; }
-
-/* Вес + "на порцию" в одну строку */
-.weight-row{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-items: center;
-}
-
-.checkline.inrow{
-  margin: 0;
-  justify-content: flex-start;
-  background: #0f0f0f;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 10px;
-  height: 100%;
-}
-
-/* чтобы чекбокс и текст были ровно по центру */
-.checkline.inrow span{
-  line-height: 1.2;
-}
-
-/* Мобильный режим: пусть это будет ровно 50/50 */
-@media (max-width: 520px) {
-  .weight-row{
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* Вес + На порцию: одинаковая высота */
-.weight-row{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-items: stretch; /* важно: растягиваем элементы одинаково */
-}
-
-/* фиксируем общую высоту ряда */
-.weight-row > input,
-.weight-row > label{
-  height: 48px;          /* можешь поставить 50px если хочешь "пухлее" */
-}
-
-/* label делаем как "контейнер", чтобы содержимое ровно центровалось */
-.checkline.inrow{
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 0 12px;       /* вместо 10px со всех сторон */
-  background: #0f0f0f;
-  border: 1px solid #333;
-  border-radius: 10px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* сам чекбокс тоже чуть стабильнее по виду */
-.checkline.inrow input[type="checkbox"]{
-  width: 20px;
-  height: 20px;
-  margin: 0;            /* иногда браузер добавляет margin */
-}
-
-/* текст не должен "раздувать" высоту */
-.checkline.inrow span{
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* ПК: название — отдельная строка на всю ширину */
-#title{
-  width: 100%;
-  margin-bottom: 10px;
 }
