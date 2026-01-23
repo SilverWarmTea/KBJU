@@ -1,74 +1,77 @@
 // ====== Constants ======
 const MACRO_KEYS = ["k", "b", "j", "u"];
-const STORAGE_KEY = "kbju_rows_v2";
+const STORAGE_KEY = "kbju_rows_v3"; // новая версия под карточный UI
 const PRODUCTS_URL = "./products.json";
 
-// Разрешаем: 0..9999 и + (одна цифра после точки) -> 0, 0.1, 12, 12.3, 1234.5
+// Разрешаем: 0..9999 и 1 знак после точки -> 0, 0.1, 12, 12.3, 1234.5
 const MACRO_RE = /^(?:0|[1-9]\d{0,3})(?:\.\d)?$/;
-const WEIGHT_RE = /^\d{1,4}$/; // 1..9999 (проверим дополнительно > 0)
+// Вес: 1..9999 (целое)
+const WEIGHT_RE = /^[0-9]{1,4}$/;
 
 // ====== DOM ======
 const dom = {
-  inputs: {
+  // Inputs
+  title: document.getElementById("title"),
+  weight: document.getElementById("weight"),
+  perPortion: document.getElementById("perPortion"),
+  macros: {
     k: document.getElementById("k"),
     b: document.getElementById("b"),
     j: document.getElementById("j"),
     u: document.getElementById("u"),
   },
+  copyTotals: document.getElementById("copyTotals"),
 
-  title: document.getElementById("title"),
-  weight: document.getElementById("weight"),
-  perPortion: document.getElementById("perPortion"),
-
+  // Buttons
   add: document.getElementById("add"),
   clear: document.getElementById("clear"),
 
-  tbody: document.getElementById("tbody"),
-  sum: document.getElementById("sum"),
-  hint: document.getElementById("hint"),
-
+  // Presets
   preset: document.getElementById("preset"),
   choose: document.getElementById("choose"),
+
+  // UI
+  hint: document.getElementById("hint"),
+  list: document.getElementById("list"),
+
+  // Totals
+  sumK: document.getElementById("sumK"),
+  sumB: document.getElementById("sumB"),
+  sumJ: document.getElementById("sumJ"),
+  sumU: document.getElementById("sumU"),
 };
 
 // ====== State ======
-let rows = loadRows();
-let presets = []; // [{name,k,b,j,u,weight}]
+let rows = loadRows();        // [{label, weight, perPortion, k,b,j,u}]
+let presets = [];             // [{name,k,b,j,u,weight}]
 
 // ====== Init ======
 init();
 render();
+dom.copyTotals?.addEventListener("click", copyTotalsToClipboard);
 
-// ====== Init Functions ======
+
 function init() {
-  // Включаем/выключаем вес при "На порцию"
-  if (dom.perPortion && dom.weight) {
-    dom.perPortion.addEventListener("change", syncWeightDisabled);
-    syncWeightDisabled();
-  }
+  // Weight disable/enable
+  dom.perPortion?.addEventListener("change", syncWeightDisabled);
+  syncWeightDisabled();
 
-  // Add
+  // Add & Clear
   dom.add?.addEventListener("click", onAdd);
-
-  // Clear
-  dom.clear?.addEventListener("click", () => {
-    rows = [];
-    saveRows();
-    render();
-    setHint("Очищено.");
-  });
+  dom.clear?.addEventListener("click", onClear);
 
   // Presets
   if (dom.preset) initPresets();
-
   dom.choose?.addEventListener("click", onChoosePreset);
 
-  // Делегирование кликов в таблице (Удалить/Повторить)
-  dom.tbody?.addEventListener("click", onTableClick);
+  // Delegated actions in list
+  dom.list?.addEventListener("click", onListClick);
 }
 
 function syncWeightDisabled() {
   const per = !!dom.perPortion?.checked;
+  if (!dom.weight) return;
+
   dom.weight.disabled = per;
   if (per) dom.weight.value = "";
 }
@@ -80,13 +83,20 @@ function onAdd() {
   const perPortion = !!dom.perPortion?.checked;
   const label = (dom.title?.value || "").trim();
 
-  const macros = readMacrosFromInputs();
-  if (!macros) return; // hint уже выставлен
+  const macros = readMacros();
+  if (!macros) return;
 
   const weight = perPortion ? null : readWeight();
   if (!perPortion && weight == null) return;
 
-  addRow(macros, weight, label, perPortion);
+  addRow({ macros, weight, label, perPortion });
+}
+
+function onClear() {
+  rows = [];
+  saveRows();
+  render();
+  setHint("Очищено.");
 }
 
 function onChoosePreset() {
@@ -100,54 +110,56 @@ function onChoosePreset() {
 
   const p = presets[idx];
 
-  // Подставим значения в поля, чтобы было видно
-  if (dom.inputs.k) dom.inputs.k.value = fmt1(p.k);
-  if (dom.inputs.b) dom.inputs.b.value = fmt1(p.b);
-  if (dom.inputs.j) dom.inputs.j.value = fmt1(p.j);
-  if (dom.inputs.u) dom.inputs.u.value = fmt1(p.u);
+  // Подставим в поля (чтобы видно было)
+  dom.macros.k.value = fmt1(p.k);
+  dom.macros.b.value = fmt1(p.b);
+  dom.macros.j.value = fmt1(p.j);
+  dom.macros.u.value = fmt1(p.u);
   if (dom.title) dom.title.value = p.name;
 
   const perPortion = !!dom.perPortion?.checked;
 
   if (perPortion) {
-    addRow({ k: p.k, b: p.b, j: p.j, u: p.u }, null, p.name, true);
+    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: null, label: p.name, perPortion: true });
   } else {
     if (dom.weight) dom.weight.value = String(p.weight);
-    addRow({ k: p.k, b: p.b, j: p.j, u: p.u }, p.weight, p.name, false);
+    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: p.weight, label: p.name, perPortion: false });
   }
 }
 
-function onTableClick(e) {
-  const target = e.target;
-  if (!(target instanceof Element)) return;
+function onListClick(e) {
+  const t = e.target;
+  if (!(t instanceof Element)) return;
 
-  const delBtn = target.closest("[data-del]");
-  const repBtn = target.closest("[data-repeat]");
+  const del = t.closest("[data-del]");
+  const rep = t.closest("[data-repeat]");
 
-  if (delBtn) {
-    const i = parseInt(delBtn.getAttribute("data-del"), 10);
+  if (del) {
+    const i = parseInt(del.getAttribute("data-del"), 10);
     if (!Number.isFinite(i) || !rows[i]) return;
+
     rows.splice(i, 1);
     saveRows();
     render();
     return;
   }
 
-  if (repBtn) {
-    const i = parseInt(repBtn.getAttribute("data-repeat"), 10);
+  if (rep) {
+    const i = parseInt(rep.getAttribute("data-repeat"), 10);
     if (!Number.isFinite(i) || !rows[i]) return;
+
     rows.push({ ...rows[i] });
     saveRows();
     render();
   }
 }
 
-// ====== Reading & Validation ======
-function readMacrosFromInputs() {
+// ====== Read & Validate ======
+function readMacros() {
   const out = {};
 
   for (const key of MACRO_KEYS) {
-    const el = dom.inputs[key];
+    const el = dom.macros[key];
     const raw = normalizeNumber(el?.value ?? "");
 
     if (raw === "") {
@@ -193,8 +205,8 @@ function normalizeNumber(str) {
   return String(str).trim().replace(",", ".");
 }
 
-// ====== Rows ======
-function addRow(macros, weight, label, perPortion) {
+// ====== Rows & Math ======
+function addRow({ macros, weight, label, perPortion }) {
   const safeLabel = String(label || "").trim();
 
   const res = perPortion
@@ -210,7 +222,7 @@ function addRow(macros, weight, label, perPortion) {
     : {
         label: safeLabel,
         perPortion: false,
-        weight: weight,
+        weight,
         ...calcByWeight(macros, weight),
       };
 
@@ -219,41 +231,18 @@ function addRow(macros, weight, label, perPortion) {
   render();
 }
 
-function calcByWeight(macros, weight) {
+function calcByWeight(m, w) {
   return {
-    k: round1((macros.k * weight) / 100),
-    b: round1((macros.b * weight) / 100),
-    j: round1((macros.j * weight) / 100),
-    u: round1((macros.u * weight) / 100),
+    k: round1((m.k * w) / 100),
+    b: round1((m.b * w) / 100),
+    j: round1((m.j * w) / 100),
+    u: round1((m.u * w) / 100),
   };
 }
 
 // ====== Render ======
 function render() {
-  if (!dom.tbody || !dom.sum) return;
-
-  // Table body
-  dom.tbody.innerHTML = rows
-    .map((r, idx) => {
-      const label = (r.label && r.label.trim()) ? escapeHtml(r.label.trim()) : String(idx + 1);
-      const w = (r.weight === "—") ? "—" : String(r.weight);
-
-      return `
-        <tr>
-          <td data-label="#">${label}</td>
-          <td data-label="Вес, г">${escapeHtml(w)}</td>
-          <td data-label="Ккал">${fmt1(r.k)}</td>
-          <td data-label="Б">${fmt1(r.b)}</td>
-          <td data-label="Ж">${fmt1(r.j)}</td>
-          <td data-label="У">${fmt1(r.u)}</td>
-          <td class="action" data-label="">
-            <button class="icon-btn" data-repeat="${idx}" title="Повторить">Повторить</button>
-            <button class="icon-btn" data-del="${idx}" title="Удалить">Удалить</button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+  if (!dom.list) return;
 
   // Totals
   const total = rows.reduce(
@@ -267,7 +256,53 @@ function render() {
     { k: 0, b: 0, j: 0, u: 0 }
   );
 
-  dom.sum.textContent = `К: ${fmt1(total.k)} | Б: ${fmt1(total.b)} | Ж: ${fmt1(total.j)} | У: ${fmt1(total.u)}`;
+  if (dom.sumK) dom.sumK.textContent = fmt1(total.k);
+  if (dom.sumB) dom.sumB.textContent = fmt1(total.b);
+  if (dom.sumJ) dom.sumJ.textContent = fmt1(total.j);
+  if (dom.sumU) dom.sumU.textContent = fmt1(total.u);
+
+  // List cards
+  dom.list.innerHTML = rows
+    .map((r, idx) => {
+      const name = (r.label && r.label.trim()) ? escapeHtml(r.label.trim()) : `#${idx + 1}`;
+      const per = r.weight === "—";
+      const sub = per ? "Порция" : `Вес: ${r.weight} г`;
+
+      return `
+        <div class="item-card" data-idx="${idx}">
+          <div class="item-head">
+            <div>
+              <div class="item-title">${name}</div>
+              <div class="item-sub">${sub}</div>
+            </div>
+            <div class="item-actions">
+              <button class="act-btn rep" data-repeat="${idx}" title="Повторить">↻</button>
+              <button class="act-btn del" data-del="${idx}" title="Удалить">✕</button>
+            </div>
+          </div>
+
+          <div class="macro-grid">
+            <div class="macro-pill">
+              <div class="macro-left">🔥 Ккал</div>
+              <div class="macro-val">${fmt1(r.k)}</div>
+            </div>
+            <div class="macro-pill">
+              <div class="macro-left">💪 Б</div>
+              <div class="macro-val">${fmt1(r.b)}</div>
+            </div>
+            <div class="macro-pill">
+              <div class="macro-left">🥑 Ж</div>
+              <div class="macro-val">${fmt1(r.j)}</div>
+            </div>
+            <div class="macro-pill">
+              <div class="macro-left">🌾 У</div>
+              <div class="macro-val">${fmt1(r.u)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 // ====== Presets ======
@@ -310,7 +345,7 @@ function sanitizePresets(data) {
     }))
     .filter((p) => {
       if (!p.name) return false;
-      // пресеты: допускаем 0.0
+      // пресеты допускают 0.0
       if (![p.k, p.b, p.j, p.u].every((n) => Number.isFinite(n) && n >= 0)) return false;
       if (!(Number.isFinite(p.weight) && p.weight > 0 && p.weight <= 9999)) return false;
       return true;
@@ -373,14 +408,43 @@ function loadRows() {
         u: Number(r.u),
       }))
       .filter((r) => {
-        // макросы должны быть числами
         if (![r.k, r.b, r.j, r.u].every((n) => Number.isFinite(n))) return false;
-        // "на порцию"
         if (r.weight === "—") return true;
-        // иначе — валидный вес
         return Number.isFinite(r.weight) && r.weight > 0;
       });
   } catch {
     return [];
+  }
+}
+
+function getTotalsText() {
+  const k = dom.sumK?.textContent ?? "0.0";
+  const b = dom.sumB?.textContent ?? "0.0";
+  const j = dom.sumJ?.textContent ?? "0.0";
+  const u = dom.sumU?.textContent ?? "0.0";
+  return `К: ${k} | Б: ${b} | Ж: ${j} | У: ${u}`;
+}
+
+async function copyTotalsToClipboard() {
+  const text = getTotalsText();
+
+  try {
+    await navigator.clipboard.writeText(text);
+    setHint("Скопировано ✅");
+  } catch {
+    // запасной вариант для старых браузеров
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      setHint("Скопировано ✅");
+    } catch {
+      setHint("Не удалось скопировать 😕");
+    }
+    document.body.removeChild(ta);
   }
 }

@@ -1,228 +1,394 @@
+/* ===== Base ===== */
 * { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  font-family: system-ui, Arial, sans-serif;
-  background: #111;
-  color: #eee;
+:root{
+  --bg: #0b1020;
+  --panel: #121a33;
+  --panel2: #162047;
+
+  --stroke: rgba(255,255,255,.09);
+  --text: #e9ecff;
+  --muted: rgba(233,236,255,.65);
+
+  --accent: #7b61ff;
+  --accent2: #ff5aa5;
+
+  --shadow: 0 10px 30px rgba(0,0,0,.45);
+  --radius: 18px;
+
+  --control-h: 48px;
 }
 
-.app {
+body{
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  background: radial-gradient(1200px 800px at 50% -20%, rgba(123,97,255,.18), transparent 55%),
+              radial-gradient(900px 700px at 10% 10%, rgba(255,90,165,.12), transparent 55%),
+              var(--bg);
+  color: var(--text);
+}
+
+.app{
   max-width: 720px;
   margin: 0 auto;
   padding: 14px;
 }
 
-h1 { font-size: 22px; margin: 6px 0 14px; }
-h2 { font-size: 18px; margin: 0 0 10px; }
+h1{
+  font-size: 22px;
+  margin: 6px 0 14px;
+  letter-spacing: .02em;
+}
 
-.card {
-  background: #1b1b1b;
-  border-radius: 14px;
+h2{
+  font-size: 18px;
+  margin: 0 0 10px;
+  letter-spacing: .02em;
+}
+
+/* ===== Cards ===== */
+.card{
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
   padding: 12px;
   margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  box-shadow: var(--shadow);
 }
 
-/* Controls */
-input, select, button {
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #333;
-  background: #0f0f0f;
-  color: #eee;
-  font-size: 16px;
-}
-
-button {
-  cursor: pointer;
-  background: #2a2a2a;
-}
-
-button:active { transform: translateY(1px); }
-
-button.danger {
-  background: #3a1a1a;
-  border-color: #5a2a2a;
-}
-
-#title {
+/* ===== Controls ===== */
+input, select, button{
   width: 100%;
-  margin-bottom: 10px;
+  height: var(--control-h);
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
 }
 
-.hint {
+input::placeholder{ color: rgba(233,236,255,.35); }
+
+input:focus, select:focus{
+  border-color: rgba(123,97,255,.55);
+  box-shadow: 0 0 0 3px rgba(123,97,255,.15);
+}
+
+button{
+  cursor: pointer;
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.10);
+}
+
+button:active{ transform: translateY(1px); }
+
+button.danger{
+  background: rgba(255, 80, 120, .22);
+  border-color: rgba(255, 80, 120, .35);
+}
+
+.hint{
   margin: 10px 0 0;
   min-height: 18px;
-  color: #bbb;
+  color: var(--muted);
   font-size: 13px;
 }
 
-/* Layout blocks */
-.inputs {
+/* ===== Form layout ===== */
+/* телефон-first: всё в одну колонку */
+.inputs{
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-/* Weight + portion (desktop + mobile) */
+/* блок вес + на порцию (пункт 5) */
 .weight-row{
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
   align-items: stretch;
+  margin-top: 10px;
 }
 
 .weight-row > input,
 .weight-row > label{
-  height: 48px;
+  height: var(--control-h);
 }
 
 .checkline{
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top:10px;
-}
-
-.checkline input[type="checkbox"]{
-  width:20px;
-  height:20px;
 }
 
 .checkline.inrow{
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
   padding: 0 12px;
-  background: #0f0f0f;
-  border: 1px solid #333;
-  border-radius: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.22);
   width: 100%;
-  box-sizing: border-box;
 }
 
 .checkline.inrow input[type="checkbox"]{
   width: 20px;
   height: 20px;
   margin: 0;
+  accent-color: var(--accent2);
 }
 
 .checkline.inrow span{
   line-height: 1;
   white-space: nowrap;
+  color: rgba(233,236,255,.85);
+  font-weight: 700;
 }
 
-/* Table (desktop) */
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+/* кнопки добавить/очистить */
+.actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 520px;
-}
-
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #2a2a2a;
-  text-align: right;
-  white-space: nowrap;
-}
-
-th:first-child, td:first-child { text-align: center; }
-td:last-child, th:last-child { text-align: center; }
-
-tbody tr:hover { background: rgba(255,255,255,0.04); }
-
-.icon-btn {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid #333;
-  background: #222;
-}
-
-/* Totals */
-.totals {
-  position: sticky;
-  top: 0;
-  background: #1b1b1b;
-  z-index: 2;
-
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-
+/* пресеты: селект + кнопка */
+.preset-row{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
   margin-top: 10px;
-  margin-bottom: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #2a2a2a;
-  font-size: 16px;
 }
 
-/* ===== Mobile layout ===== */
-@media (max-width: 520px) {
-  .inputs { grid-template-columns: 1fr; }
+/* поле названия */
+#title{
+  width: 100%;
+  margin-bottom: 10px;
+}
 
-  .row { grid-template-columns: 1fr; }
+/* ===== Totals (4 cards) ===== */
+.totals-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 10px 0 14px;
+}
 
-  .row button,
-  .row select,
-  .row input { width: 100%; }
+.total-card{
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
 
-  /* Mobile "cards" view for results */
-  .table-wrap {
-    overflow: visible;
-    border: none;
-  }
+.total-card .t-ico{
+  font-size: 26px;
+  margin-bottom: 10px;
+}
 
-  table {
-    min-width: 0;
-    width: 100%;
-  }
+.total-card .t-title{
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+}
 
-  thead { display: none; }
+.total-card .t-val{
+  margin-top: 8px;
+  font-size: 34px;
+  font-weight: 900;
+  display:flex;
+  gap: 10px;
+  align-items: baseline;
+}
 
-  tbody tr {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #2a2a2a;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.03);
-  }
+.total-card .t-unit{
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 700;
+}
 
-  tbody td {
-    display: flex;
-    justify-content: space-between;
+.t-k{ background: linear-gradient(135deg, rgba(255,140,60,.35), rgba(90,40,20,.25)); }
+.t-b{ background: linear-gradient(135deg, rgba(70,210,140,.28), rgba(20,70,60,.22)); }
+.t-j{ background: linear-gradient(135deg, rgba(200,90,220,.26), rgba(70,20,90,.20)); }
+.t-u{ background: linear-gradient(135deg, rgba(90,150,255,.30), rgba(20,40,90,.20)); }
+
+/* ===== List (product cards) ===== */
+#list{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.item-head{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+}
+
+.item-title{
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.item-sub{
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.item-actions{
+  display:flex;
+  gap: 8px;
+}
+
+.act-btn{
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display:grid;
+  place-items:center;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.10);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.act-btn:active{ transform: translateY(1px); }
+
+.act-btn.del{
+  background: rgba(255,90,165,.22);
+  border-color: rgba(255,90,165,.35);
+}
+
+.act-btn.rep{
+  background: rgba(123,97,255,.22);
+  border-color: rgba(123,97,255,.35);
+}
+
+/* 2x2 макросы внутри карточки */
+.macro-grid{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.macro-pill{
+  background: rgba(0,0,0,.18);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.macro-left{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.macro-val{
+  font-weight: 900;
+}
+
+/* ===== Desktop tweaks (не ломаем телефон, просто чуть шире/удобнее) ===== */
+@media (min-width: 720px) {
+  .inputs{
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    border: none;
-    padding: 0;
-    text-align: left;
   }
 
-  tbody td::before {
-    content: attr(data-label);
-    color: #bbb;
+  .preset-row{
+    grid-template-columns: 1fr auto;
+    align-items: center;
   }
 
-  tbody td.action {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-    padding-top: 6px;
+  .totals-grid{
+    grid-template-columns: repeat(2, 1fr);
   }
+
+  .actions{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.icon-input{
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.ii-icon{
+  height: var(--control-h);
+  width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.06);
+  font-size: 20px;
+}
+
+/* чтобы input занимал всю высоту и выглядел как раньше */
+.icon-input input{
+  height: var(--control-h);
+}
+
+.results-head{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.results-head h2{
+  margin: 0;
+}
+
+.copy-btn{
+  width: auto;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  background: rgba(123,97,255,.18);
+  border-color: rgba(123,97,255,.35);
+}
+
+/* Select: внешний вид в закрытом состоянии */
+select{
+  background: rgba(0,0,0,.22);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+}
+
+/* Пункты списка (работает там, где браузер позволяет) */
+select option{
+  background: #121a33;     /* тёмный фон */
+  color: #e9ecff;          /* светлый текст */
+}
+
+/* Выбранный пункт (не везде применится) */
+select option:checked{
+  background: #1a2652;
 }

@@ -3,71 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>КБЖУ калькулятор</title>
+  <title>КБЖУ</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app">
     <h1>КБЖУ по весу</h1>
 
-    <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40">
-
+    <!-- Ввод -->
     <div class="card">
-      <div class="inputs">    
-        <input type="number" step="0.1" min="0" placeholder="Ккал / 100г" id="k">
-        <input type="number" step="0.1" min="0" placeholder="Белки / 100г" id="b">
-        <input type="number" step="0.1" min="0" placeholder="Жиры / 100г" id="j">
-        <input type="number" step="0.1" min="0" placeholder="Углеводы / 100г" id="u">
-      </div>
+      <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40" />
 
-      <div class="row">
-        <button id="add">Добавить</button>
-        <button id="clear" class="danger">Очистить</button>
-      </div>
+      <div class="inputs">
+  <div class="icon-input">
+    <div class="ii-icon">🔥</div>
+    <input type="number" step="0.1" min="0" placeholder="Ккал / 100г" id="k" />
+  </div>
 
-      <div class="row weight-row">
-        <input type="number" min="0" step="1" placeholder="Вес (г)" id="weight">
+  <div class="icon-input">
+    <div class="ii-icon">💪</div>
+    <input type="number" step="0.1" min="0" placeholder="Белки / 100г" id="b" />
+  </div>
 
+  <div class="icon-input">
+    <div class="ii-icon">🥑</div>
+    <input type="number" step="0.1" min="0" placeholder="Жиры / 100г" id="j" />
+  </div>
+
+  <div class="icon-input">
+    <div class="ii-icon">🌾</div>
+    <input type="number" step="0.1" min="0" placeholder="Углеводы / 100г" id="u" />
+  </div>
+</div>
+
+
+      <!-- Вес + На порцию (в одной строке) -->
+      <div class="weight-row">
+        <input type="number" min="0" step="1" placeholder="Вес (г)" id="weight" />
         <label class="checkline inrow">
-          <input type="checkbox" id="perPortion">
+          <input type="checkbox" id="perPortion" />
           <span>На порцию</span>
         </label>
       </div>
 
+      <!-- Кнопки -->
+      <div class="actions">
+        <button id="add">Добавить</button>
+        <button id="clear" class="danger">Очистить</button>
+      </div>
 
-      <div class="row">
+      <!-- Пресеты -->
+      <div class="preset-row">
         <select id="preset" aria-label="Выбор продукта"></select>
         <button id="choose">Выбрать</button>
       </div>
 
-
       <p class="hint" id="hint"></p>
     </div>
 
+    <!-- Результаты -->
     <div class="card">
-      <h2>Результаты</h2>
-        <div class="totals">
-          <div id="sum">К: 0.0 | Б: 0.0 | Ж: 0.0 | У: 0.0</div>
-        </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Вес, г</th>
-              <th>Ккал</th>
-              <th>Б</th>
-              <th>Ж</th>
-              <th>У</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+      <div class="results-head">
+        <h2>Результаты</h2>
+        <button id="copyTotals" class="copy-btn" type="button">Копировать</button>
       </div>
 
-      
+      <!-- Итоги за день (4 карточки) -->
+      <div class="totals-grid" id="totalsGrid">
+        <div class="total-card t-k">
+          <div class="t-ico">🔥</div>
+          <div class="t-title">КАЛОРИИ</div>
+          <div class="t-val"><span id="sumK">0.0</span><span class="t-unit">ккал</span></div>
+        </div>
+
+        <div class="total-card t-b">
+          <div class="t-ico">💪</div>
+          <div class="t-title">БЕЛКИ</div>
+          <div class="t-val"><span id="sumB">0.0</span><span class="t-unit">г</span></div>
+        </div>
+
+        <div class="total-card t-j">
+          <div class="t-ico">🥑</div>
+          <div class="t-title">ЖИРЫ</div>
+          <div class="t-val"><span id="sumJ">0.0</span><span class="t-unit">г</span></div>
+        </div>
+
+        <div class="total-card t-u">
+          <div class="t-ico">🌾</div>
+          <div class="t-title">УГЛЕВОДЫ</div>
+          <div class="t-val"><span id="sumU">0.0</span><span class="t-unit">г</span></div>
+        </div>
+      </div>
+
+      <!-- Список продуктов (карточки) -->
+      <div id="list"></div>
     </div>
   </div>
 
