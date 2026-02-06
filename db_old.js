@@ -1,12 +1,6 @@
 import { sb } from "./supabaseClient.js";
 import { round1, setHint } from "./utils.js";
 import { state } from "./state.js";
-import { apiGetFoods, apiAddFood } from "./apiClient.js";
-
-/**
- * current_items — пока оставляем напрямую через sb (PostgREST)
- * foods — переводим на Edge Function (apiClient.js), чтобы мобила не отваливалась
- */
 
 export async function loadRowsFromDB() {
   const { data, error } = await sb
@@ -69,25 +63,23 @@ export async function saveRowToDB(macros, weight, perPortion, label) {
 }
 
 export async function loadPresetsFromDB() {
-  try {
-    const data = await apiGetFoods();
+  const { data, error } = await sb
+    .from("foods")
+    .select("id,name,k,b,j,u,per_weight_g")
+    .order("name", { ascending: true });
 
-    return (data ?? []).map(x => ({
-      id: x.id,
-      name: String(x.name ?? "").trim(),
-      k: Number(x.k),
-      b: Number(x.b),
-      j: Number(x.j),
-      u: Number(x.u),
-      per_weight_g: Number(x.per_weight_g) || 100,
-      weight: 100,
-    })).filter(p => p.name);
+  if (error) throw error;
 
-  } catch (e) {
-    console.error(e);
-    setHint("Ошибка загрузки foods (API)");
-    return [];
-  }
+  return (data ?? []).map(x => ({
+    id: x.id,
+    name: String(x.name ?? "").trim(),
+    k: Number(x.k),
+    b: Number(x.b),
+    j: Number(x.j),
+    u: Number(x.u),
+    per_weight_g: Number(x.per_weight_g) || 100,
+    weight: 100,
+  })).filter(p => p.name);
 }
 
 export async function saveFoodIfNotExists(food, existingPresets = []) {
@@ -105,15 +97,15 @@ export async function saveFoodIfNotExists(food, existingPresets = []) {
 
   if (same) return { ok: false, reason: "exists" };
 
-  // Вставка через Edge Function (стабильнее на мобиле)
-  await apiAddFood({
+  const { error } = await sb.from("foods").insert([{
     name: food.name,
     k: food.k,
     b: food.b,
     j: food.j,
     u: food.u,
     per_weight_g: food.per_weight_g,
-  });
+  }]);
 
+  if (error) throw error;
   return { ok: true };
 }
