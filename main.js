@@ -14,7 +14,7 @@ import { render } from "./render.js";
 import { copyTotalsToClipboard } from "./clipboard.js";
 import { initPresets } from "./presets.js";
 import { loadRowsFromDB } from "./db.js";
-import { setHint } from "./utils.js";
+
 import { syncWeightDisabled, onAdd, onClear, onChoosePreset, onListClick } from "./handlers.js";
 
 init();
