@@ -47,10 +47,10 @@
       </div>
 
       <!-- Кнопки -->
-      <div class="actions">
-        <button id="add">Добавить</button>
-        <button id="clear" class="danger">Очистить</button>
+      <div class="add-wrap">
+        <button id="add" class="btn primary btn-full">Добавить</button>
       </div>
+
 
       <!-- Пресеты -->
       <div class="preset-row">
@@ -63,35 +63,40 @@
 
     <!-- Результаты -->
     <div class="card">
-      <div class="results-head">
+      <div class="section-head results-head">
         <h2>Результаты</h2>
-        <button id="copyTotals" class="copy-btn" type="button">Копировать</button>
+
+        <div class="results-actions">
+        <button id="copyTotals" class="btn ghost">Копировать</button>
+        <button id="clear" class="icon-btn danger" title="Очистить список">✕</button>
+        </div>
       </div>
+
 
       <!-- Итоги за день (4 карточки) -->
       <div class="totals-grid" id="totalsGrid">
         <div class="total-card t-k">
           <div class="t-ico">🔥</div>
-          <div class="t-title">КАЛОРИИ</div>
-          <div class="t-val"><span id="sumK">0.0</span><span class="t-unit">ккал</span></div>
+          <div class="t-title">КАЛОРИИ <span class="t-unit">ккал</span></div>
+          <div class="t-val"><span id="sumK">0.0</span></div>
         </div>
 
         <div class="total-card t-b">
           <div class="t-ico">💪</div>
-          <div class="t-title">БЕЛКИ</div>
-          <div class="t-val"><span id="sumB">0.0</span><span class="t-unit">г</span></div>
+          <div class="t-title">БЕЛКИ <span class="t-unit">г</span></div>
+          <div class="t-val"><span id="sumB">0.0</span></div>
         </div>
 
         <div class="total-card t-j">
           <div class="t-ico">🥑</div>
-          <div class="t-title">ЖИРЫ</div>
-          <div class="t-val"><span id="sumJ">0.0</span><span class="t-unit">г</span></div>
+          <div class="t-title">ЖИРЫ <span class="t-unit">г</span></div>
+          <div class="t-val"><span id="sumJ">0.0</span></div>
         </div>
 
         <div class="total-card t-u">
           <div class="t-ico">🌾</div>
-          <div class="t-title">УГЛЕВОДЫ</div>
-          <div class="t-val"><span id="sumU">0.0</span><span class="t-unit">г</span></div>
+          <div class="t-title">УГЛЕВОДЫ <span class="t-unit">г</span></div>
+          <div class="t-val"><span id="sumU">0.0</span></div>
         </div>
       </div>
 
@@ -100,6 +105,7 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+ 
+  <script type="module" src="main.js"></script>
 </body>
 </html>

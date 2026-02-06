@@ -97,14 +97,13 @@ button.danger{
 }
 
 /* ===== Form layout ===== */
-/* телефон-first: всё в одну колонку */
 .inputs{
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
 }
 
-/* блок вес + на порцию (пункт 5) */
+/* вес + на порцию */
 .weight-row{
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -147,7 +146,7 @@ button.danger{
   font-weight: 700;
 }
 
-/* кнопки добавить/очистить */
+/* сетка под 2 кнопки (если где-то нужна) */
 .actions{
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -155,7 +154,11 @@ button.danger{
   margin-top: 12px;
 }
 
-/* пресеты: селект + кнопка */
+/* блок под одну кнопку ("Добавить") */
+.add-wrap{ margin-top: 12px; }
+.btn-full{ width: 100%; }
+
+/* пресеты */
 .preset-row{
   display: grid;
   grid-template-columns: 1fr;
@@ -169,7 +172,117 @@ button.danger{
   margin-bottom: 10px;
 }
 
-/* ===== Totals (4 cards) ===== */
+/* ===== Inputs with emoji icon ===== */
+.icon-input{
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.ii-icon{
+  height: var(--control-h);
+  width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.06);
+  font-size: 20px;
+}
+
+.icon-input input{ height: var(--control-h); }
+
+/* ===== Select ===== */
+select{
+  background: rgba(0,0,0,.22);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+}
+
+select option{
+  background: #121a33;
+  color: #e9ecff;
+}
+
+select option:checked{ background: #1a2652; }
+
+/* ===== Results header ===== */
+.results-head{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.results-head h2{ margin: 0; }
+
+.results-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Copy button theme */
+.results-actions .btn{
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results-actions .btn.ghost{
+  background: linear-gradient(
+    135deg,
+    rgba(120, 100, 255, 0.35),
+    rgba(80, 160, 255, 0.25)
+  );
+  border: 1px solid rgba(140, 130, 255, 0.45);
+  color: #fff;
+}
+
+/* Clear (X) button */
+.icon-btn{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.icon-btn:hover{ transform: scale(1.05); }
+
+.icon-btn.danger{
+  background: linear-gradient(
+    135deg,
+    rgba(255, 90, 120, 0.35),
+    rgba(255, 60, 90, 0.25)
+  );
+  border: 1px solid rgba(255, 120, 140, 0.45);
+}
+
+.icon-btn.danger:hover{
+  background: linear-gradient(
+    135deg,
+    rgba(255, 90, 120, 0.55),
+    rgba(255, 60, 90, 0.35)
+  );
+  border: 1px solid rgba(255, 140, 160, 0.7);
+}
+
+/* ===== Totals ===== */
 .totals-grid{
   display: grid;
   grid-template-columns: 1fr;
@@ -254,12 +367,16 @@ button.danger{
   gap: 8px;
 }
 
+/* action buttons in product card */
 .act-btn{
   width: 38px;
   height: 38px;
-  border-radius: 999px;
-  display:grid;
-  place-items:center;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
   border: 1px solid var(--stroke);
   background: rgba(255,255,255,.10);
   color: var(--text);
@@ -278,7 +395,14 @@ button.danger{
   border-color: rgba(123,97,255,.35);
 }
 
-/* 2x2 макросы внутри карточки */
+.ico{
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: rgba(255,255,255,0.92);
+}
+
+/* macros grid in card */
 .macro-grid{
   margin-top: 12px;
   display:grid;
@@ -305,11 +429,21 @@ button.danger{
   font-weight: 800;
 }
 
-.macro-val{
-  font-weight: 900;
+.macro-val{ font-weight: 900; }
+
+/* ===== Responsive ===== */
+@media (max-width: 520px) {
+  .totals-grid{
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .total-card{
+    padding: 12px;
+    min-height: 110px;
+  }
 }
 
-/* ===== Desktop tweaks (не ломаем телефон, просто чуть шире/удобнее) ===== */
 @media (min-width: 720px) {
   .inputs{
     grid-template-columns: repeat(2, 1fr);
@@ -320,75 +454,13 @@ button.danger{
     grid-template-columns: 1fr auto;
     align-items: center;
   }
+}
 
+@media (min-width: 900px) {
   .totals-grid{
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
   }
 
-  .actions{
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.icon-input{
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.ii-icon{
-  height: var(--control-h);
-  width: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  border: 1px solid var(--stroke);
-  background: rgba(255,255,255,.06);
-  font-size: 20px;
-}
-
-/* чтобы input занимал всю высоту и выглядел как раньше */
-.icon-input input{
-  height: var(--control-h);
-}
-
-.results-head{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.results-head h2{
-  margin: 0;
-}
-
-.copy-btn{
-  width: auto;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-weight: 800;
-  background: rgba(123,97,255,.18);
-  border-color: rgba(123,97,255,.35);
-}
-
-/* Select: внешний вид в закрытом состоянии */
-select{
-  background: rgba(0,0,0,.22);
-  border: 1px solid var(--stroke);
-  color: var(--text);
-}
-
-/* Пункты списка (работает там, где браузер позволяет) */
-select option{
-  background: #121a33;     /* тёмный фон */
-  color: #e9ecff;          /* светлый текст */
-}
-
-/* Выбранный пункт (не везде применится) */
-select option:checked{
-  background: #1a2652;
+  .total-card{ min-height: 120px; }
 }

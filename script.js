@@ -1,7 +1,16 @@
+// ===== Supabase =====
+const SUPABASE_URL = "https://qznxqgavwemplturysql.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6bnhxZ2F2d2VtcGx0dXJ5c3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4Mjk2NzEsImV4cCI6MjA4NTQwNTY3MX0.MZGdVpbIw6vfLYHcCsTelWzTsp2CR2rjeOWbuTRu77Y";
+
+const sb = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
 // ====== Constants ======
 const MACRO_KEYS = ["k", "b", "j", "u"];
 const STORAGE_KEY = "kbju_rows_v3"; // новая версия под карточный UI
-const PRODUCTS_URL = "./products.json";
+
 
 // Разрешаем: 0..9999 и 1 знак после точки -> 0, 0.1, 12, 12.3, 1234.5
 const MACRO_RE = /^(?:0|[1-9]\d{0,3})(?:\.\d)?$/;
@@ -42,7 +51,7 @@ const dom = {
 };
 
 // ====== State ======
-let rows = loadRows();        // [{label, weight, perPortion, k,b,j,u}]
+let rows = [];        // [{label, weight, perPortion, k,b,j,u}]
 let presets = [];             // [{name,k,b,j,u,weight}]
 
 // ====== Init ======
@@ -66,6 +75,7 @@ function init() {
 
   // Delegated actions in list
   dom.list?.addEventListener("click", onListClick);
+  loadRowsFromDB();
 }
 
 function syncWeightDisabled() {
@@ -92,9 +102,13 @@ function onAdd() {
   addRow({ macros, weight, label, perPortion });
 }
 
-function onClear() {
+async function onClear() {
   rows = [];
-  saveRows();
+  await sb
+    .from("current_items")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000");
+
   render();
   setHint("Очищено.");
 }
@@ -111,10 +125,16 @@ function onChoosePreset() {
   const p = presets[idx];
 
   // Подставим в поля (чтобы видно было)
-  dom.macros.k.value = fmt1(p.k);
-  dom.macros.b.value = fmt1(p.b);
-  dom.macros.j.value = fmt1(p.j);
-  dom.macros.u.value = fmt1(p.u);
+  const base = p.per_weight_g || 100;
+  const k100 = (p.k * 100) / base;
+  const b100 = (p.b * 100) / base;
+  const j100 = (p.j * 100) / base;
+  const u100 = (p.u * 100) / base;
+
+  dom.macros.k.value = fmt1(k100);
+  dom.macros.b.value = fmt1(b100);
+  dom.macros.j.value = fmt1(j100);
+  dom.macros.u.value = fmt1(u100);
   if (dom.title) dom.title.value = p.name;
 
   const perPortion = !!dom.perPortion?.checked;
@@ -227,6 +247,7 @@ function addRow({ macros, weight, label, perPortion }) {
       };
 
   rows.push(res);
+  saveRowToDB(macros, weight, perPortion, safeLabel);
   saveRows();
   render();
 }
@@ -310,11 +331,22 @@ async function initPresets() {
   dom.preset.innerHTML = `<option value="">Загрузка…</option>`;
 
   try {
-    const resp = await fetch(PRODUCTS_URL, { cache: "no-store" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const { data, error } = await sb
+      .from("foods")
+      .select("id,name,k,b,j,u,per_weight_g")
+      .order("name", { ascending: true });
 
-    const data = await resp.json();
-    presets = sanitizePresets(data);
+    if (error) throw error;
+
+    presets = (data ?? []).map(x => ({
+      id: x.id,
+      name: String(x.name ?? "").trim(),
+      k: Number(x.k),
+      b: Number(x.b),
+      j: Number(x.j),
+      u: Number(x.u),
+      per_weight_g: Number(x.per_weight_g) || 100,
+    })).filter(p => p.name);
 
     if (presets.length === 0) {
       dom.preset.innerHTML = `<option value="">(Список пуст)</option>`;
@@ -324,10 +356,11 @@ async function initPresets() {
     dom.preset.innerHTML = presets
       .map((p, i) => `<option value="${i}">${escapeHtml(p.name)}</option>`)
       .join("");
-  } catch {
+  } catch (e) {
+    console.error(e);
     presets = [];
     dom.preset.innerHTML = `<option value="">(Не удалось загрузить список)</option>`;
-    setHint("Не смог загрузить products.json. Проверь, что файл рядом с index.html и попал в репозиторий.");
+    setHint("Не смог загрузить список из Supabase (foods). Проверь ключи/RLS.");
   }
 }
 
@@ -447,4 +480,61 @@ async function copyTotalsToClipboard() {
     }
     document.body.removeChild(ta);
   }
+}
+
+async function loadRowsFromDB() {
+  const { data, error } = await sb
+    .from("current_items")
+    .select("*")
+    .order("position", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    setHint("Ошибка загрузки из БД");
+    return;
+  }
+
+  // преобразуем записи БД в формат UI
+  rows = data.map(r => {
+    const perPortion = r.per_weight_g === 1 && r.qty_g === 1;
+
+    const factor = r.qty_g / r.per_weight_g;
+
+    return {
+      label: r.custom_name ?? "",
+      perPortion,
+      weight: perPortion ? "—" : r.qty_g,
+      k: round1(r.k * factor),
+      b: round1(r.b * factor),
+      j: round1(r.j * factor),
+      u: round1(r.u * factor),
+    };
+  });
+
+  render();
+}
+
+async function saveRowToDB(macros, weight, perPortion, label) {
+  const qty = perPortion ? 1 : weight;
+  const perWeight = perPortion ? 1 : 100;
+
+  const { data: last } = await sb
+    .from("current_items")
+    .select("position")
+    .order("position", { ascending: false })
+    .limit(1);
+
+  const nextPos = (last?.[0]?.position ?? 0) + 1;
+
+  await sb.from("current_items").insert([{
+    food_id: null,
+    custom_name: label,
+    k: macros.k,
+    b: macros.b,
+    j: macros.j,
+    u: macros.u,
+    per_weight_g: perWeight,
+    qty_g: qty,
+    position: nextPos
+  }]);
 }
