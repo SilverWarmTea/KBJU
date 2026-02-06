@@ -1,3 +1,14 @@
+import { setHint } from "./utils.js";
+
+window.addEventListener("error", (e) => {
+  setHint("JS error: " + (e.message || "unknown"));
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  setHint("Promise error: " + (e.reason?.message || e.reason || "unknown"));
+});
+
+
 import { dom } from "./dom.js";
 import { render } from "./render.js";
 import { copyTotalsToClipboard } from "./clipboard.js";

@@ -18,3 +18,28 @@ export async function apiAddFood(payload) {
   if (!r.ok) throw new Error(JSON.stringify(j));
   return j.data;
 }
+
+export async function apiGetCurrentItems() {
+  const r = await fetch(`${FN_BASE}/current-items`, { method: "GET" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j.data || [];
+}
+
+export async function apiAddCurrentItem(payload) {
+  const r = await fetch(`${FN_BASE}/current-items`, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify(payload),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j.data;
+}
+
+export async function apiClearCurrentItems() {
+  const r = await fetch(`${FN_BASE}/current-items`, { method: "DELETE" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return true;
+}
