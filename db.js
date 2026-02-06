@@ -1,7 +1,7 @@
-import { sb } from "./supabaseClient.js";
 import { round1, setHint } from "./utils.js";
 import { state } from "./state.js";
-import { apiGetFoods, apiAddFood } from "./apiClient.js";
+import { apiGetFoods, apiAddFood, apiGetCurrentItems, apiAddCurrentItem, apiClearCurrentItems } from "./apiClient.js";
+
 
 /**
  * current_items — пока оставляем напрямую через sb (PostgREST)
@@ -9,53 +9,41 @@ import { apiGetFoods, apiAddFood } from "./apiClient.js";
  */
 
 export async function loadRowsFromDB() {
-  const { data, error } = await sb
-    .from("current_items")
-    .select("*")
-    .order("position", { ascending: true });
+  try {
+    const data = await apiGetCurrentItems();
 
-  if (error) {
-    console.error(error);
-    setHint("Ошибка загрузки из БД");
-    return;
+    state.rows = (data ?? []).map(r => {
+      const perPortion = r.per_weight_g === 1 && r.qty_g === 1;
+      const factor = r.qty_g / r.per_weight_g;
+
+      return {
+        label: r.custom_name ?? "",
+        perPortion,
+        weight: perPortion ? "—" : r.qty_g,
+        k: round1(r.k * factor),
+        b: round1(r.b * factor),
+        j: round1(r.j * factor),
+        u: round1(r.u * factor),
+      };
+    });
+  } catch (e) {
+    console.error(e);
+    setHint("Ошибка загрузки current_items (API)");
   }
-
-  state.rows = (data ?? []).map(r => {
-    const perPortion = r.per_weight_g === 1 && r.qty_g === 1;
-    const factor = r.qty_g / r.per_weight_g;
-
-    return {
-      label: r.custom_name ?? "",
-      perPortion,
-      weight: perPortion ? "—" : r.qty_g,
-      k: round1(r.k * factor),
-      b: round1(r.b * factor),
-      j: round1(r.j * factor),
-      u: round1(r.u * factor),
-    };
-  });
 }
 
+
 export async function clearRowsInDB() {
-  await sb
-    .from("current_items")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
+  await apiClearCurrentItems();
 }
 
 export async function saveRowToDB(macros, weight, perPortion, label) {
   const qty = perPortion ? 1 : weight;
   const perWeight = perPortion ? 1 : 100;
 
-  const { data: last } = await sb
-    .from("current_items")
-    .select("position")
-    .order("position", { ascending: false })
-    .limit(1);
+  const nextPos = (state.rows?.length ?? 0) + 1;
 
-  const nextPos = (last?.[0]?.position ?? 0) + 1;
-
-  await sb.from("current_items").insert([{
+  await apiAddCurrentItem({
     food_id: null,
     custom_name: label,
     k: macros.k,
@@ -64,8 +52,8 @@ export async function saveRowToDB(macros, weight, perPortion, label) {
     u: macros.u,
     per_weight_g: perWeight,
     qty_g: qty,
-    position: nextPos
-  }]);
+    position: nextPos,
+  });
 }
 
 export async function loadPresetsFromDB() {
