@@ -43,3 +43,13 @@ export async function apiClearCurrentItems() {
   if (!r.ok) throw new Error(JSON.stringify(j));
   return true;
 }
+
+export async function apiDeleteCurrentItem(id) {
+  const res = await fetch(`${API}/quick-api/current-items/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error ?? `DELETE failed (${res.status})`);
+  return json;
+}

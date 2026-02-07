@@ -1,12 +1,15 @@
 import { round1, setHint } from "./utils.js";
 import { state } from "./state.js";
 import { apiGetFoods, apiAddFood, apiGetCurrentItems, apiAddCurrentItem, apiClearCurrentItems } from "./apiClient.js";
-
+import { apiDeleteCurrentItem } from "./apiClient.js"; 
 
 /**
  * current_items — пока оставляем напрямую через sb (PostgREST)
  * foods — переводим на Edge Function (apiClient.js), чтобы мобила не отваливалась
  */
+export async function deleteRowInDB(id) {
+  await apiDeleteCurrentItem(id);
+}
 
 export async function loadRowsFromDB() {
   try {
@@ -17,6 +20,7 @@ export async function loadRowsFromDB() {
       const factor = r.qty_g / r.per_weight_g;
 
       return {
+        id: r.id, 
         label: r.custom_name ?? "",
         perPortion,
         weight: perPortion ? "—" : r.qty_g,
@@ -104,4 +108,19 @@ export async function saveFoodIfNotExists(food, existingPresets = []) {
   });
 
   return { ok: true };
+}
+
+export async function deleteRowById(id) {
+  const response = await fetch(`${API}/quick-api/current-items/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete row with id ${id}`);
+  }
+
+  return await response.json();
 }

@@ -6,6 +6,7 @@ import { addRow } from "./rows.js";
 import { render } from "./render.js";
 import { clearRowsInDB, loadRowsFromDB, saveFoodIfNotExists } from "./db.js";
 import { applyPresetToInputs, reloadPresets } from "./presets.js";
+import { deleteRowInDB } from "./db.js";
 
 
 export function syncWeightDisabled() {
@@ -141,7 +142,7 @@ async function onSaveAsFood(idx) {
   }
 }
 
-export function onListClick(e) {
+export async function onListClick(e) {
   const t = e.target;
   if (!(t instanceof Element)) return;
 
@@ -160,8 +161,26 @@ export function onListClick(e) {
     const i = parseInt(del.getAttribute("data-del"), 10);
     if (!Number.isFinite(i) || !state.rows[i]) return;
 
-    state.rows.splice(i, 1);
-    render();
+    const row = state.rows[i];
+    const id = row?.id; // ✅ теперь он будет (после правки loadRowsFromDB)
+
+    if (!id) {
+      // Фолбэк: чтобы интерфейс не ломался, можно удалить визуально
+      // но лучше подсказать, что id нет
+      setHintTemp("Не могу удалить из базы: у строки нет id 😬");
+      state.rows.splice(i, 1);
+      render();
+      return;
+    }
+
+    try {
+      await deleteRowInDB(id);   // ✅ удаляем в БД
+      state.rows.splice(i, 1);   // ✅ удаляем в UI
+      render();
+    } catch (err) {
+      console.error(err);
+      setHintTemp("Не удалось удалить из базы 😕");
+    }
     return;
   }
 
