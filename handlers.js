@@ -75,8 +75,9 @@ export function onChoosePreset() {
   if (perPortion) {
     addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: null, label: p.name, perPortion: true });
   } else {
-    if (dom.weight) dom.weight.value = "100";
-    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: 100, label: p.name, perPortion: false });
+    const w = Number(p.per_weight_g) || 100;
+    if (dom.weight) dom.weight.value = String(w);
+    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: w, label: p.name, perPortion: false });
   }
 
   render();
@@ -100,7 +101,7 @@ async function onSaveAsFood(idx) {
 
   if (r.weight === "—") {
     // порция
-    per_weight_g = 1;
+    per_weight_g = 100;
     k = Number(r.k);
     b = Number(r.b);
     j = Number(r.j);
@@ -108,10 +109,12 @@ async function onSaveAsFood(idx) {
   } else {
     // пересчёт обратно на 100г
     const w = Number(r.weight);
+    
     if (!Number.isFinite(w) || w <= 0) {
       setHintTemp("Странный вес — не сохраняю 😕");
       return;
     }
+    per_weight_g = w;
 
     k = round1((Number(r.k) * 100) / w);
     b = round1((Number(r.b) * 100) / w);

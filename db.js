@@ -38,8 +38,8 @@ export async function clearRowsInDB() {
 }
 
 export async function saveRowToDB(macros, weight, perPortion, label) {
-  const qty = perPortion ? 1 : weight;
-  const perWeight = perPortion ? 1 : 100;
+  const qty = perPortion ? 100 : weight;   // порция = 100 условных единиц
+  const perWeight = 100;                   // всегда база 100
 
   const nextPos = (state.rows?.length ?? 0) + 1;
 
@@ -68,7 +68,7 @@ export async function loadPresetsFromDB() {
       j: Number(x.j),
       u: Number(x.u),
       per_weight_g: Number(x.per_weight_g) || 100,
-      weight: 100,
+      weight: Number(x.per_weight_g) || 100,
     })).filter(p => p.name);
 
   } catch (e) {
