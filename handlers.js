@@ -4,9 +4,11 @@ import { setHint, setHintTemp, round1 } from "./utils.js";
 import { readMacros, readWeight } from "./validation.js";
 import { addRow } from "./rows.js";
 import { render } from "./render.js";
-import { bumpFoodStatus, clearRowsInDB, loadRowsFromDB, saveFoodIfNotExists } from "./db.js";
+import { bumpFoodStatus, clearRowsInDB, saveFoodIfNotExists } from "./db.js";
 import { applyPresetToInputs, reloadPresets } from "./presets.js";
 import { deleteRowInDB } from "./db.js";
+
+const desktopPresetMedia = window.matchMedia("(min-width: 1100px)");
 
 export function syncWeightDisabled() {
   const per = !!dom.perPortion?.checked;
@@ -69,6 +71,11 @@ export async function onChoosePreset() {
     return;
   }
 
+  if (desktopPresetMedia.matches) {
+    setHintTemp(`Заполнено: ${p.name}`);
+    return;
+  }
+
   const perPortion = !!dom.perPortion?.checked;
 
   if (perPortion) {
@@ -82,6 +89,26 @@ export async function onChoosePreset() {
   render();
   clearInputs();
   setHintTemp(`Добавлено: ${p.name}`);
+
+  try {
+    await bumpFoodStatus(p.id);
+    await reloadPresets();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export async function onPresetListClick(e) {
+  const item = e.target instanceof Element ? e.target.closest("[data-preset-item]") : null;
+  if (!item) return;
+
+  const idx = parseInt(item.getAttribute("data-preset-item"), 10);
+  if (!Number.isFinite(idx)) return;
+
+  const p = applyPresetToInputs(idx);
+  if (!p) return;
+
+  setHintTemp(`Заполнено: ${p.name}`);
 
   try {
     await bumpFoodStatus(p.id);
@@ -105,14 +132,12 @@ async function onSaveAsFood(idx) {
   let k = 0, b = 0, j = 0, u = 0;
 
   if (r.weight === "—") {
-    // порция
     per_weight_g = 100;
     k = Number(r.k);
     b = Number(r.b);
     j = Number(r.j);
     u = Number(r.u);
   } else {
-    // пересчёт обратно на 100г
     const w = Number(r.weight);
 
     if (!Number.isFinite(w) || w <= 0) {

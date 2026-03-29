@@ -18,6 +18,7 @@ export const dom = {
   // Presets
   preset: document.getElementById("preset"),
   choose: document.getElementById("choose"),
+  presetList: document.getElementById("presetList"),
 
   // UI
   hint: document.getElementById("hint"),

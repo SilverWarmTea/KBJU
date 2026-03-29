@@ -29,9 +29,17 @@ body{
 }
 
 .app{
-  max-width: 720px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 14px;
+}
+
+.app-shell{
+  display: block;
+}
+
+.main-column{
+  min-width: 0;
 }
 
 h1{
@@ -164,6 +172,76 @@ button.danger{
   grid-template-columns: 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+
+.preset-sidebar{
+  display: none;
+}
+
+.preset-sidebar-head{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.preset-sidebar-head h2{
+  margin: 0;
+}
+
+.preset-sidebar-sub{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.preset-list{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preset-item{
+  width: 100%;
+  height: auto;
+  min-height: 58px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: rgba(255,255,255,.05);
+}
+
+.preset-item:hover{
+  border-color: rgba(123,97,255,.55);
+  background: rgba(123,97,255,.12);
+}
+
+.preset-item.is-active{
+  border-color: rgba(255,90,165,.55);
+  background: linear-gradient(135deg, rgba(123,97,255,.18), rgba(255,90,165,.16));
+  box-shadow: 0 0 0 1px rgba(255,90,165,.12) inset;
+}
+
+.preset-item-name{
+  font-weight: 800;
+  color: var(--text);
+}
+
+.preset-item-meta{
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: .03em;
+}
+
+.preset-empty{
+  border: 1px dashed var(--stroke);
+  border-radius: 14px;
+  padding: 18px 14px;
+  color: var(--muted);
+  text-align: center;
 }
 
 /* поле названия */
@@ -463,4 +541,25 @@ select option:checked{ background: #1a2652; }
   }
 
   .total-card{ min-height: 120px; }
+}
+
+@media (min-width: 1100px) {
+  .app-shell{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .preset-row{
+    display: none;
+  }
+
+  .preset-sidebar{
+    display: block;
+    position: sticky;
+    top: 14px;
+    max-height: calc(100vh - 28px);
+    overflow: auto;
+  }
 }

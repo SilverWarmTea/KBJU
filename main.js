@@ -8,14 +8,13 @@ window.addEventListener("unhandledrejection", (e) => {
   setHint("Promise error: " + (e.reason?.message || e.reason || "unknown"));
 });
 
-
 import { dom } from "./dom.js";
 import { render } from "./render.js";
 import { copyTotalsToClipboard } from "./clipboard.js";
 import { initPresets } from "./presets.js";
 import { loadRowsFromDB } from "./db.js";
 
-import { syncWeightDisabled, onAdd, onClear, onChoosePreset, onListClick } from "./handlers.js";
+import { syncWeightDisabled, onAdd, onClear, onChoosePreset, onListClick, onPresetListClick } from "./handlers.js";
 
 init();
 
@@ -33,6 +32,7 @@ async function init() {
     dom.choose?.addEventListener("click", onChoosePreset);
   }
 
+  dom.presetList?.addEventListener("click", onPresetListClick);
   dom.list?.addEventListener("click", onListClick);
 
   try {
