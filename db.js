@@ -68,7 +68,7 @@ export async function loadPresetsFromDB() {
       .map(x => ({
         id: x.id,
         name: String(x.name ?? "").trim(),
-        status: Number(x.status) || 0,
+        status: Number(x.status ?? 0) || 0,
         k: Number(x.k),
         b: Number(x.b),
         j: Number(x.j),
@@ -78,7 +78,7 @@ export async function loadPresetsFromDB() {
       }))
       .filter(p => p.name)
       .sort((a, b) =>
-        a.status - b.status ||
+        b.status - a.status ||
         a.name.localeCompare(b.name, "ru", { sensitivity: "base" })
       );
 
