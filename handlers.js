@@ -4,10 +4,9 @@ import { setHint, setHintTemp, round1 } from "./utils.js";
 import { readMacros, readWeight } from "./validation.js";
 import { addRow } from "./rows.js";
 import { render } from "./render.js";
-import { clearRowsInDB, loadRowsFromDB, saveFoodIfNotExists } from "./db.js";
+import { bumpFoodStatus, clearRowsInDB, loadRowsFromDB, saveFoodIfNotExists } from "./db.js";
 import { applyPresetToInputs, reloadPresets } from "./presets.js";
 import { deleteRowInDB } from "./db.js";
-
 
 export function syncWeightDisabled() {
   const per = !!dom.perPortion?.checked;
@@ -33,7 +32,6 @@ export function onAdd() {
   render();
   clearInputs();
   setHintTemp(`Добавлено: ${label || "без названия"}`);
-
 }
 
 function clearInputs() {
@@ -56,7 +54,7 @@ export async function onClear() {
   setHint("Очищено.");
 }
 
-export function onChoosePreset() {
+export async function onChoosePreset() {
   setHint("");
 
   const idx = parseInt(dom.preset?.value ?? "", 10);
@@ -85,6 +83,12 @@ export function onChoosePreset() {
   clearInputs();
   setHintTemp(`Добавлено: ${p.name}`);
 
+  try {
+    await bumpFoodStatus(p.id);
+    await reloadPresets();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function onSaveAsFood(idx) {
@@ -110,7 +114,7 @@ async function onSaveAsFood(idx) {
   } else {
     // пересчёт обратно на 100г
     const w = Number(r.weight);
-    
+
     if (!Number.isFinite(w) || w <= 0) {
       setHintTemp("Странный вес — не сохраняю 😕");
       return;
@@ -162,11 +166,9 @@ export async function onListClick(e) {
     if (!Number.isFinite(i) || !state.rows[i]) return;
 
     const row = state.rows[i];
-    const id = row?.id; // ✅ теперь он будет (после правки loadRowsFromDB)
+    const id = row?.id;
 
     if (!id) {
-      // Фолбэк: чтобы интерфейс не ломался, можно удалить визуально
-      // но лучше подсказать, что id нет
       setHintTemp("Не могу удалить из базы: у строки нет id 😬");
       state.rows.splice(i, 1);
       render();
@@ -174,8 +176,8 @@ export async function onListClick(e) {
     }
 
     try {
-      await deleteRowInDB(id);   // ✅ удаляем в БД
-      state.rows.splice(i, 1);   // ✅ удаляем в UI
+      await deleteRowInDB(id);
+      state.rows.splice(i, 1);
       render();
     } catch (err) {
       console.error(err);
@@ -192,4 +194,3 @@ export async function onListClick(e) {
     render();
   }
 }
-

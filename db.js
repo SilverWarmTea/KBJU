@@ -1,6 +1,6 @@
 import { round1, setHint } from "./utils.js";
 import { state } from "./state.js";
-import { apiGetFoods, apiAddFood, apiGetCurrentItems, apiAddCurrentItem, apiClearCurrentItems } from "./apiClient.js";
+import { apiGetFoods, apiAddFood, apiGetCurrentItems, apiAddCurrentItem, apiClearCurrentItems, apiIncrementFoodStatus } from "./apiClient.js";
 import { apiDeleteCurrentItem } from "./apiClient.js"; 
 
 /**
@@ -39,6 +39,11 @@ export async function loadRowsFromDB() {
 
 export async function clearRowsInDB() {
   await apiClearCurrentItems();
+}
+
+export async function bumpFoodStatus(id) {
+  if (!id) return null;
+  return apiIncrementFoodStatus(id);
 }
 
 export async function saveRowToDB(macros, weight, perPortion, label) {
@@ -112,6 +117,7 @@ export async function saveFoodIfNotExists(food, existingPresets = []) {
     j: food.j,
     u: food.u,
     per_weight_g: food.per_weight_g,
+    status: 0,
   });
 
   return { ok: true };
