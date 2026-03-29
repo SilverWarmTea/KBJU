@@ -64,16 +64,23 @@ export async function loadPresetsFromDB() {
   try {
     const data = await apiGetFoods();
 
-    return (data ?? []).map(x => ({
-      id: x.id,
-      name: String(x.name ?? "").trim(),
-      k: Number(x.k),
-      b: Number(x.b),
-      j: Number(x.j),
-      u: Number(x.u),
-      per_weight_g: Number(x.per_weight_g) || 100,
-      weight: Number(x.per_weight_g) || 100,
-    })).filter(p => p.name);
+    return (data ?? [])
+      .map(x => ({
+        id: x.id,
+        name: String(x.name ?? "").trim(),
+        status: Number(x.status) || 0,
+        k: Number(x.k),
+        b: Number(x.b),
+        j: Number(x.j),
+        u: Number(x.u),
+        per_weight_g: Number(x.per_weight_g) || 100,
+        weight: Number(x.per_weight_g) || 100,
+      }))
+      .filter(p => p.name)
+      .sort((a, b) =>
+        a.status - b.status ||
+        a.name.localeCompare(b.name, "ru", { sensitivity: "base" })
+      );
 
   } catch (e) {
     console.error(e);
