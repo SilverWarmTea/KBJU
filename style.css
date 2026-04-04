@@ -22,9 +22,10 @@
 body{
   margin: 0;
   font-family: system-ui, Arial, sans-serif;
-  background: radial-gradient(1200px 800px at 50% -20%, rgba(123,97,255,.18), transparent 55%),
-              radial-gradient(900px 700px at 10% 10%, rgba(255,90,165,.12), transparent 55%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 800px at 50% -20%, rgba(123,97,255,.18), transparent 55%),
+    radial-gradient(900px 700px at 10% 10%, rgba(255,90,165,.12), transparent 55%),
+    var(--bg);
   color: var(--text);
 }
 
@@ -40,6 +41,8 @@ body{
 
 .main-column{
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 h1{
@@ -77,7 +80,9 @@ input, select, button{
   outline: none;
 }
 
-input::placeholder{ color: rgba(233,236,255,.35); }
+input::placeholder{
+  color: rgba(233,236,255,.35);
+}
 
 input:focus, select:focus{
   border-color: rgba(123,97,255,.55);
@@ -90,7 +95,9 @@ button{
   border-color: rgba(255,255,255,.10);
 }
 
-button:active{ transform: translateY(1px); }
+button:active{
+  transform: translateY(1px);
+}
 
 button.danger{
   background: rgba(255, 80, 120, .22);
@@ -126,9 +133,9 @@ button.danger{
 }
 
 .checkline{
-  display:flex;
-  align-items:center;
-  gap:10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .checkline.inrow{
@@ -163,10 +170,15 @@ button.danger{
 }
 
 /* блок под одну кнопку ("Добавить") */
-.add-wrap{ margin-top: 12px; }
-.btn-full{ width: 100%; }
+.add-wrap{
+  margin-top: 12px;
+}
 
-/* пресеты */
+.btn-full{
+  width: 100%;
+}
+
+/* ===== Presets ===== */
 .preset-row{
   display: grid;
   grid-template-columns: 1fr;
@@ -176,6 +188,7 @@ button.danger{
 
 .preset-sidebar{
   display: none;
+  box-sizing: border-box;
 }
 
 .preset-sidebar-head{
@@ -183,6 +196,7 @@ button.danger{
   flex-direction: column;
   gap: 4px;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 }
 
 .preset-sidebar-head h2{
@@ -198,6 +212,10 @@ button.danger{
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .preset-item{
@@ -269,7 +287,9 @@ button.danger{
   font-size: 20px;
 }
 
-.icon-input input{ height: var(--control-h); }
+.icon-input input{
+  height: var(--control-h);
+}
 
 /* ===== Select ===== */
 select{
@@ -283,18 +303,22 @@ select option{
   color: #e9ecff;
 }
 
-select option:checked{ background: #1a2652; }
+select option:checked{
+  background: #1a2652;
+}
 
 /* ===== Results header ===== */
 .results-head{
-  display:flex;
-  align-items:center;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-.results-head h2{ margin: 0; }
+.results-head h2{
+  margin: 0;
+}
 
 .results-actions{
   display: flex;
@@ -340,7 +364,9 @@ select option:checked{ background: #1a2652; }
   transition: 0.2s;
 }
 
-.icon-btn:hover{ transform: scale(1.05); }
+.icon-btn:hover{
+  transform: scale(1.05);
+}
 
 .icon-btn.danger{
   background: linear-gradient(
@@ -392,7 +418,7 @@ select option:checked{ background: #1a2652; }
   margin-top: 8px;
   font-size: 34px;
   font-weight: 900;
-  display:flex;
+  display: flex;
   gap: 10px;
   align-items: baseline;
 }
@@ -410,7 +436,7 @@ select option:checked{ background: #1a2652; }
 
 /* ===== List (product cards) ===== */
 #list{
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 12px;
 }
@@ -423,9 +449,9 @@ select option:checked{ background: #1a2652; }
 }
 
 .item-head{
-  display:flex;
+  display: flex;
   justify-content: space-between;
-  align-items:flex-start;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -441,7 +467,7 @@ select option:checked{ background: #1a2652; }
 }
 
 .item-actions{
-  display:flex;
+  display: flex;
   gap: 8px;
 }
 
@@ -461,7 +487,9 @@ select option:checked{ background: #1a2652; }
   cursor: pointer;
 }
 
-.act-btn:active{ transform: translateY(1px); }
+.act-btn:active{
+  transform: translateY(1px);
+}
 
 .act-btn.del{
   background: rgba(255,90,165,.22);
@@ -483,7 +511,7 @@ select option:checked{ background: #1a2652; }
 /* macros grid in card */
 .macro-grid{
   margin-top: 12px;
-  display:grid;
+  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
@@ -493,21 +521,23 @@ select option:checked{ background: #1a2652; }
   border: 1px solid var(--stroke);
   border-radius: 14px;
   padding: 10px 12px;
-  display:flex;
-  align-items:center;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
 .macro-left{
-  display:flex;
-  align-items:center;
+  display: flex;
+  align-items: center;
   gap: 8px;
   color: var(--muted);
   font-weight: 800;
 }
 
-.macro-val{ font-weight: 900; }
+.macro-val{
+  font-weight: 900;
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 520px) {
@@ -540,7 +570,9 @@ select option:checked{ background: #1a2652; }
     gap: 14px;
   }
 
-  .total-card{ min-height: 120px; }
+  .total-card{
+    min-height: 120px;
+  }
 }
 
 @media (min-width: 1100px) {
@@ -548,7 +580,7 @@ select option:checked{ background: #1a2652; }
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
     gap: 18px;
-    align-items: start;
+    align-items: stretch;
   }
 
   .preset-row{
@@ -556,10 +588,11 @@ select option:checked{ background: #1a2652; }
   }
 
   .preset-sidebar{
-    display: block;
-    position: sticky;
-    top: 14px;
-    max-height: calc(100vh - 28px);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 100%;
+    max-height: none;
+    overflow: hidden;
   }
 }
