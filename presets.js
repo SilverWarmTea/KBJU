@@ -65,16 +65,10 @@ export function applyPresetToInputs(idx) {
   const p = state.presets[idx];
   if (!p) return null;
 
-  const base = p.per_weight_g || 100;
-  const k100 = (p.k * 100) / base;
-  const b100 = (p.b * 100) / base;
-  const j100 = (p.j * 100) / base;
-  const u100 = (p.u * 100) / base;
-
-  dom.macros.k.value = fmt1(k100);
-  dom.macros.b.value = fmt1(b100);
-  dom.macros.j.value = fmt1(j100);
-  dom.macros.u.value = fmt1(u100);
+  dom.macros.k.value = fmt1(p.k);
+  dom.macros.b.value = fmt1(p.b);
+  dom.macros.j.value = fmt1(p.j);
+  dom.macros.u.value = fmt1(p.u);
   if (dom.title) dom.title.value = p.name;
   if (dom.weight) dom.weight.value = String(Number(p.per_weight_g) || 100);
   if (dom.preset) dom.preset.value = String(idx);
