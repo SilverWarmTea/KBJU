@@ -41,6 +41,7 @@ body{
 
 .main-column{
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -189,6 +190,7 @@ button.danger{
 .preset-sidebar{
   display: none;
   box-sizing: border-box;
+  min-height: 0;
 }
 
 .preset-sidebar-head{
@@ -214,6 +216,7 @@ button.danger{
   gap: 8px;
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
   overflow: auto;
   padding-right: 2px;
 }
@@ -581,6 +584,7 @@ select option:checked{
     grid-template-columns: minmax(0, 1fr) 340px;
     gap: 18px;
     align-items: stretch;
+    min-height: 0;
   }
 
   .preset-row{
@@ -591,8 +595,15 @@ select option:checked{
     display: flex;
     flex-direction: column;
     align-self: stretch;
-    min-height: 100%;
-    max-height: none;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
+  }
+
+  .preset-list{
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 0;
+    overflow: auto;
   }
 }
