@@ -638,3 +638,39 @@ select option:checked{
 .preset-list::-webkit-scrollbar-corner{
   background: transparent;
 }
+
+.preset-list{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123,97,255,.75) rgba(255,255,255,.06);
+}
+
+.preset-list::-webkit-scrollbar{
+  width: 12px;
+}
+
+.preset-list::-webkit-scrollbar-track{
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+}
+
+.preset-list::-webkit-scrollbar-thumb{
+  background: linear-gradient(
+    180deg,
+    rgba(123,97,255,.95),
+    rgba(255,90,165,.85)
+  );
+  border-radius: 999px;
+  border: 2px solid rgba(18,26,51,.95);
+}
+
+.preset-list::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(
+    180deg,
+    rgba(140,110,255,1),
+    rgba(255,110,180,.95)
+  );
+}
+
+.preset-list::-webkit-scrollbar-corner{
+  background: transparent;
+}
