@@ -592,15 +592,15 @@ select option:checked{
     display: none;
   }
 
-  .preset-sidebar{
+   .preset-sidebar{
     display: flex;
     flex-direction: column;
     align-self: stretch;
     min-height: 0;
-    height: 100%;
     overflow: hidden;
     margin-bottom: 0;
-    padding-right: 8px;
+    padding-right: 10px;
+    height: auto;
   }
 
   .preset-list{
