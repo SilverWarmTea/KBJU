@@ -29,7 +29,6 @@ export async function loadRowsFromDB() {
       return {
         id: r.id,
         label: r.custom_name ?? "",
-        company: normalizeCompany(r.company),
         perPortion,
         weight: perPortion ? "—" : r.qty_g,
         k: round1(r.k * factor),
@@ -77,8 +76,6 @@ export async function saveRowToDB(macros, weight, perPortion, label, company) {
     per_weight_g: perWeight,
     qty_g: qty,
     position: nextPos,
-    custom_name: label,
-    company: company ?? null,
   });
 }
 
