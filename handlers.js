@@ -204,3 +204,51 @@ export async function onListClick(e) {
     }
   }
 }
+
+export function onQuickInputCommit() {
+  const raw = String(dom.quickInput?.value || "").trim();
+  if (!raw) return;
+
+  const parsed = parseQuickInput(raw);
+  if (!parsed) {
+    setHintTemp("Не смог разобрать строку 😕");
+    return;
+  }
+
+  dom.macros.k.value = String(parsed.k);
+  dom.macros.b.value = String(parsed.b);
+  dom.macros.j.value = String(parsed.j);
+  dom.macros.u.value = String(parsed.u);
+
+  if (parsed.weight != null && dom.weight && !dom.perPortion?.checked) {
+    dom.weight.value = String(parsed.weight);
+  }
+
+  setHintTemp("КБЖУ подставлены ✅");
+}
+
+function parseQuickInput(text) {
+  const normalized = String(text)
+    .replace(/,/g, ".")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const read = (letter) => {
+    const re = new RegExp(`${letter}\\s*([0-9]+(?:\\.[0-9]+)?)`, "i");
+    const m = normalized.match(re);
+    return m ? Number(m[1]) : null;
+  };
+
+  const k = read("К");
+  const b = read("Б");
+  const j = read("Ж");
+  const u = read("У");
+  const weight = read("В");
+
+  if ([k, b, j, u].some(v => v == null || !Number.isFinite(v))) {
+    return null;
+  }
+
+  return { k, b, j, u, weight };
+}
+

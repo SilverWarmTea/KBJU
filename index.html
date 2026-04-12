@@ -14,24 +14,34 @@
       <div class="main-column">
         <div class="card">
 
-          <!-- НАЗВАНИЕ + КОМПАНИЯ -->
-          <div class="title-row">
-            <input
-              type="text"
-              id="title"
-              placeholder="Название (необязательно)"
-              maxlength="40"
-            />
+  <div class="quick-input-row">
+    <input
+      type="text"
+      id="quickInput"
+      placeholder="Быстрый ввод: К 120 Б 10 Ж 3 У 15 В 200"
+      maxlength="120"
+      autocomplete="off"
+    />
+  </div>
 
-            <input
-              type="text"
-              id="company"
-              list="companyList"
-              placeholder="Фирма"
-            />
+  <!-- НАЗВАНИЕ + КОМПАНИЯ -->
+  <div class="title-row">
+    <input
+      type="text"
+      id="title"
+      placeholder="Название (необязательно)"
+      maxlength="40"
+    />
 
-            <datalist id="companyList"></datalist>
-          </div>
+    <input
+      type="text"
+      id="company"
+      list="companyList"
+      placeholder="Фирма"
+    />
+
+    <datalist id="companyList"></datalist>
+  </div>
 
           <div class="inputs">
             <div class="icon-input">
@@ -73,6 +83,8 @@
         <div class="card action-panel">
           <div class="toolbar">
             <a class="page-link" href="./products.html">Продукты</a>
+            <button type="button" class="page-link page-link-btn" disabled>Запасы</button>
+    <button type="button" class="page-link page-link-btn" disabled>Калькулятор</button>
           </div>
         </div>
 
@@ -119,6 +131,42 @@
   </div>
 
   <link rel="stylesheet" href="style.css?v=3.0.1" />
+
+  <div class="modal-backdrop hidden" id="copyModalBackdrop">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="copyModalTitle">
+    <div class="modal-head">
+      <h2 id="copyModalTitle">Копирование итогов</h2>
+      <button type="button" class="icon-btn danger" id="copyModalClose" title="Закрыть">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="copy-modal-grid">
+        <div class="field-block">
+          <label for="copyDate">Дата</label>
+          <input type="date" id="copyDate" />
+        </div>
+
+        <div class="field-block">
+          <label for="copyActivity">Активность</label>
+          <select id="copyActivity">
+            <option value="зал">зал</option>
+            <option value="волейбол">волейбол</option>
+            <option value="отдых">отдых</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="copy-preview-wrap">
+        <div class="copy-preview-title">Предпросмотр</div>
+        <div class="copy-preview" id="copyPreview"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="copyModalConfirm">Копировать</button>
+    </div>
+  </div>
+</div>
   <script type="module" src="main.js?v=3.0.1"></script>
 </body>
 </html>

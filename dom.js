@@ -1,5 +1,6 @@
 export const dom = {
   // Inputs
+  quickInput: document.getElementById("quickInput"),
   title: document.getElementById("title"),
   weight: document.getElementById("weight"),
   company: document.getElementById("company"),
@@ -12,7 +13,12 @@ export const dom = {
     u: document.getElementById("u"),
   },
   copyTotals: document.getElementById("copyTotals"),
-
+copyModalBackdrop: document.getElementById("copyModalBackdrop"),
+copyModalClose: document.getElementById("copyModalClose"),
+copyModalConfirm: document.getElementById("copyModalConfirm"),
+copyDate: document.getElementById("copyDate"),
+copyActivity: document.getElementById("copyActivity"),
+copyPreview: document.getElementById("copyPreview"),
   // Buttons
   add: document.getElementById("add"),
   clear: document.getElementById("clear"),
