@@ -2,6 +2,8 @@ export const dom = {
   // Inputs
   title: document.getElementById("title"),
   weight: document.getElementById("weight"),
+  company: document.getElementById("company"),
+  companyList: document.getElementById("companyList"),
   perPortion: document.getElementById("perPortion"),
   macros: {
     k: document.getElementById("k"),

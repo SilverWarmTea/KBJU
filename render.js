@@ -24,6 +24,7 @@ export function render() {
   dom.list.innerHTML = state.rows
     .map((r, idx) => {
       const name = (r.label && r.label.trim()) ? escapeHtml(r.label.trim()) : `#${idx + 1}`;
+      const company = r.company ? `Фирма: ${escapeHtml(r.company)}` : "Без фирмы";
       const per = r.weight === "—";
       const sub = per ? "Порция" : `Вес: ${r.weight} г`;
 
@@ -32,13 +33,15 @@ export function render() {
           <div class="item-head">
             <div>
               <div class="item-title">${name}</div>
+              <div class="item-sub">${company}</div>
               <div class="item-sub">${sub}</div>
             </div>
             <div class="item-actions">
-              <button class="act-btn save" data-save="${idx}" title="Сохранить в список продуктов"> 
-              <svg viewBox="0 0 24 24" aria-hidden="true" class="ico">
-    <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h12V6.5L19 8v11z"/>
-  </svg></button>
+              <button class="act-btn save" data-save="${idx}" title="Сохранить в список продуктов">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="ico">
+                  <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h12V6.5L19 8v11z"/>
+                </svg>
+              </button>
               <button class="act-btn rep" data-repeat="${idx}" title="Повторить">↻</button>
               <button class="act-btn del" data-del="${idx}" title="Удалить">✕</button>
             </div>

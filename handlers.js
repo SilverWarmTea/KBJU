@@ -4,11 +4,12 @@ import { setHint, setHintTemp, round1 } from "./utils.js";
 import { readMacros, readWeight } from "./validation.js";
 import { addRow } from "./rows.js";
 import { render } from "./render.js";
-import { bumpFoodStatus, clearRowsInDB, saveFoodIfNotExists } from "./db.js";
-import { applyPresetToInputs, reloadPresets } from "./presets.js";
-import { deleteRowInDB } from "./db.js";
-
-const desktopPresetMedia = window.matchMedia("(min-width: 1100px)");
+import {
+  clearRowsInDB,
+  saveFoodIfNotExists,
+  deleteRowInDB,
+  saveRowToDB
+} from "./db.js";
 
 export function syncWeightDisabled() {
   const per = !!dom.perPortion?.checked;
@@ -23,6 +24,7 @@ export function onAdd() {
 
   const perPortion = !!dom.perPortion?.checked;
   const label = (dom.title?.value || "").trim();
+  const company = (dom.company?.value || "").trim() || null;
 
   const macros = readMacros();
   if (!macros) return;
@@ -30,7 +32,7 @@ export function onAdd() {
   const weight = perPortion ? null : readWeight();
   if (!perPortion && weight == null) return;
 
-  addRow({ macros, weight, label, perPortion });
+  addRow({ macros, weight, label, perPortion, company });
   render();
   clearInputs();
   setHintTemp(`Добавлено: ${label || "без названия"}`);
@@ -54,68 +56,6 @@ export async function onClear() {
   await clearRowsInDB();
   render();
   setHint("Очищено.");
-}
-
-export async function onChoosePreset() {
-  setHint("");
-
-  const idx = parseInt(dom.preset?.value ?? "", 10);
-  if (!Number.isFinite(idx)) {
-    setHint("Выберите продукт из списка.");
-    return;
-  }
-
-  const p = applyPresetToInputs(idx);
-  if (!p) {
-    setHint("Выберите продукт из списка.");
-    return;
-  }
-
-  if (desktopPresetMedia.matches) {
-    setHintTemp(`Заполнено: ${p.name}`);
-    return;
-  }
-
-  const perPortion = !!dom.perPortion?.checked;
-
-  if (perPortion) {
-    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: null, label: p.name, perPortion: true });
-  } else {
-    const w = Number(p.per_weight_g) || 100;
-    if (dom.weight) dom.weight.value = String(w);
-    addRow({ macros: { k: p.k, b: p.b, j: p.j, u: p.u }, weight: w, label: p.name, perPortion: false });
-  }
-
-  render();
-  clearInputs();
-  setHintTemp(`Добавлено: ${p.name}`);
-
-  try {
-    await bumpFoodStatus(p.id);
-    await reloadPresets();
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-export async function onPresetListClick(e) {
-  const item = e.target instanceof Element ? e.target.closest("[data-preset-item]") : null;
-  if (!item) return;
-
-  const idx = parseInt(item.getAttribute("data-preset-item"), 10);
-  if (!Number.isFinite(idx)) return;
-
-  const p = applyPresetToInputs(idx);
-  if (!p) return;
-
-  setHintTemp(`Заполнено: ${p.name}`);
-
-  try {
-    await bumpFoodStatus(p.id);
-    await reloadPresets();
-  } catch (e) {
-    console.error(e);
-  }
 }
 
 async function onSaveAsFood(idx) {
@@ -144,8 +84,8 @@ async function onSaveAsFood(idx) {
       setHintTemp("Странный вес — не сохраняю 😕");
       return;
     }
-    per_weight_g = w;
 
+    per_weight_g = w;
     k = round1((Number(r.k) * 100) / w);
     b = round1((Number(r.b) * 100) / w);
     j = round1((Number(r.j) * 100) / w);
@@ -154,7 +94,15 @@ async function onSaveAsFood(idx) {
 
   try {
     const res = await saveFoodIfNotExists(
-      { name, k, b, j, u, per_weight_g },
+      {
+        name,
+        company: r.company ?? null,
+        k,
+        b,
+        j,
+        u,
+        per_weight_g
+      },
       state.presets
     );
 
@@ -163,7 +111,6 @@ async function onSaveAsFood(idx) {
       return;
     }
 
-    await reloadPresets();
     setHintTemp("Сохранено в продукты 💾");
   } catch (e) {
     console.error(e);
@@ -215,7 +162,45 @@ export async function onListClick(e) {
     const i = parseInt(rep.getAttribute("data-repeat"), 10);
     if (!Number.isFinite(i) || !state.rows[i]) return;
 
-    state.rows.push({ ...state.rows[i] });
+    const row = state.rows[i];
+    const duplicated = { ...row };
+
+    state.rows.push(duplicated);
     render();
+
+    try {
+      const perPortion = duplicated.weight === "—";
+      const weight = perPortion ? null : Number(duplicated.weight);
+
+      let macros;
+
+      if (perPortion) {
+        macros = {
+          k: Number(duplicated.k),
+          b: Number(duplicated.b),
+          j: Number(duplicated.j),
+          u: Number(duplicated.u),
+        };
+      } else {
+        const w = Number(weight);
+        macros = {
+          k: round1((Number(duplicated.k) * 100) / w),
+          b: round1((Number(duplicated.b) * 100) / w),
+          j: round1((Number(duplicated.j) * 100) / w),
+          u: round1((Number(duplicated.u) * 100) / w),
+        };
+      }
+
+     await saveRowToDB(
+  macros,
+  weight,
+  perPortion,
+  String(duplicated.label || "").trim(),
+  duplicated.company ?? null
+);
+    } catch (err) {
+      console.error(err);
+      setHintTemp("Повторилось только локально — в БД не сохранилось 😕");
+    }
   }
 }

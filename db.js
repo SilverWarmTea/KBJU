@@ -1,12 +1,19 @@
 import { round1, setHint } from "./utils.js";
 import { state } from "./state.js";
-import { apiGetFoods, apiAddFood, apiGetCurrentItems, apiAddCurrentItem, apiClearCurrentItems, apiIncrementFoodStatus } from "./apiClient.js";
-import { apiDeleteCurrentItem } from "./apiClient.js"; 
+import {
+  apiGetFoods,
+  apiAddFood,
+  apiGetCurrentItems,
+  apiAddCurrentItem,
+  apiClearCurrentItems,
+  apiDeleteCurrentItem
+} from "./apiClient.js";
 
 /**
- * current_items — пока оставляем напрямую через sb (PostgREST)
- * foods — переводим на Edge Function (apiClient.js), чтобы мобила не отваливалась
+ * current_items — текущий список результатов
+ * foods — список сохранённых продуктов
  */
+
 export async function deleteRowInDB(id) {
   await apiDeleteCurrentItem(id);
 }
@@ -20,8 +27,9 @@ export async function loadRowsFromDB() {
       const factor = r.qty_g / r.per_weight_g;
 
       return {
-        id: r.id, 
+        id: r.id,
         label: r.custom_name ?? "",
+        company: normalizeCompany(r.company),
         perPortion,
         weight: perPortion ? "—" : r.qty_g,
         k: round1(r.k * factor),
@@ -36,21 +44,28 @@ export async function loadRowsFromDB() {
   }
 }
 
-
 export async function clearRowsInDB() {
   await apiClearCurrentItems();
 }
 
-export async function bumpFoodStatus(id) {
-  if (!id) return null;
-  return apiIncrementFoodStatus(id);
-}
+export async function saveRowToDB(macros, weight, perPortion, label, company) {
+  const qty = perPortion ? 100 : weight;
+  const perWeight = 100;
 
-export async function saveRowToDB(macros, weight, perPortion, label) {
-  const qty = perPortion ? 100 : weight;   // порция = 100 условных единиц
-  const perWeight = 100;                   // всегда база 100
+  
+  let nextPos = 1;
 
-  const nextPos = (state.rows?.length ?? 0) + 1;
+  try {
+    const existing = await apiGetCurrentItems();
+    const maxPos = (existing ?? []).reduce((acc, item) => {
+      const p = Number(item.position) || 0;
+      return Math.max(acc, p);
+    }, 0);
+
+    nextPos = maxPos + 1;
+  } catch (e) {
+    console.error(e);
+  }
 
   await apiAddCurrentItem({
     food_id: null,
@@ -62,6 +77,8 @@ export async function saveRowToDB(macros, weight, perPortion, label) {
     per_weight_g: perWeight,
     qty_g: qty,
     position: nextPos,
+    custom_name: label,
+    company: company ?? null,
   });
 }
 
@@ -70,22 +87,21 @@ export async function loadPresetsFromDB() {
     const data = await apiGetFoods();
 
     return (data ?? [])
-      .map(x => ({
-        id: x.id,
-        name: String(x.name ?? "").trim(),
-        status: Number(x.status ?? 0) || 0,
-        k: Number(x.k),
-        b: Number(x.b),
-        j: Number(x.j),
-        u: Number(x.u),
-        per_weight_g: Number(x.per_weight_g) || 100,
-        weight: Number(x.per_weight_g) || 100,
-      }))
-      .filter(p => p.name)
-      .sort((a, b) =>
-        b.status - a.status ||
-        a.name.localeCompare(b.name, "ru", { sensitivity: "base" })
-      );
+  .map(x => ({
+    id: x.id,
+    name: String(x.name ?? "").trim(),
+    company: normalizeCompany(x.company),
+    k: Number(x.k),
+    b: Number(x.b),
+    j: Number(x.j),
+    u: Number(x.u),
+    per_weight_g: Number(x.per_weight_g) || 100,
+    weight: Number(x.per_weight_g) || 100,
+  }))
+  .filter(p => p.name)
+  .sort((a, b) =>
+    a.name.localeCompare(b.name, "ru", { sensitivity: "base" })
+  );
 
   } catch (e) {
     console.error(e);
@@ -94,10 +110,15 @@ export async function loadPresetsFromDB() {
   }
 }
 
-export async function saveFoodIfNotExists(food, existingPresets = []) {
-  // food: { name, k, b, j, u, per_weight_g }
+function normalizeCompany(value) {
+  const raw = String(value ?? "").trim();
 
-  const eps = 0.05; // допуск на округление
+  if (!raw || raw === "0") return null;
+  return raw;
+}
+
+export async function saveFoodIfNotExists(food, existingPresets = []) {
+  const eps = 0.05;
 
   const same = existingPresets.some(p =>
     Number(p.per_weight_g || 100) === Number(food.per_weight_g || 100) &&
@@ -109,31 +130,25 @@ export async function saveFoodIfNotExists(food, existingPresets = []) {
 
   if (same) return { ok: false, reason: "exists" };
 
-  // Вставка через Edge Function (стабильнее на мобиле)
   await apiAddFood({
     name: food.name,
-    k: food.k,
-    b: food.b,
-    j: food.j,
-    u: food.u,
-    per_weight_g: food.per_weight_g,
-    status: 0,
+  company: food.company ?? null,
+  k: food.k,
+  b: food.b,
+  j: food.j,
+  u: food.u,
+  per_weight_g: food.per_weight_g,
   });
 
   return { ok: true };
 }
 
-export async function deleteRowById(id) {
-  const response = await fetch(`${API}/quick-api/current-items/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to delete row with id ${id}`);
-  }
-
-  return await response.json();
+export function extractCompanies(presets) {
+  return [...new Set(
+    presets
+      .map(p => p.company)
+      .filter(Boolean)
+  )].sort((a, b) =>
+    a.localeCompare(b, "ru", { sensitivity: "base" })
+  );
 }

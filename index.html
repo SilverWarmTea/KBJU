@@ -4,16 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>КБЖУ</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3.0.0" />
 </head>
 <body>
   <div class="app">
-    <h1>КБЖУ по весу (V2.6)</h1>
+    <h1>КБЖУ по весу (v3.0)</h1>
 
     <div class="app-shell">
       <div class="main-column">
         <div class="card">
-          <input type="text" id="title" placeholder="Название (необязательно)" maxlength="40" />
+
+          <!-- НАЗВАНИЕ + КОМПАНИЯ -->
+          <div class="title-row">
+            <input
+              type="text"
+              id="title"
+              placeholder="Название (необязательно)"
+              maxlength="40"
+            />
+
+            <input
+              type="text"
+              id="company"
+              list="companyList"
+              placeholder="Фирма"
+            />
+
+            <datalist id="companyList"></datalist>
+          </div>
 
           <div class="inputs">
             <div class="icon-input">
@@ -49,12 +67,13 @@
             <button id="add" class="btn primary btn-full">Добавить</button>
           </div>
 
-          <div class="preset-row">
-            <select id="preset" aria-label="Выбор продукта"></select>
-            <button id="choose">Выбрать</button>
-          </div>
-
           <p class="hint" id="hint"></p>
+        </div>
+
+        <div class="card action-panel">
+          <div class="toolbar">
+            <a class="page-link" href="./products.html">Продукты</a>
+          </div>
         </div>
 
         <div class="card">
@@ -96,17 +115,10 @@
           <div id="list"></div>
         </div>
       </div>
-
-      <aside class="card preset-sidebar">
-        <div class="preset-sidebar-head">
-          <h2>Продукты</h2>
-          <div class="preset-sidebar-sub">Клик заполняет форму сверху</div>
-        </div>
-        <div id="presetList" class="preset-list"></div>
-      </aside>
     </div>
   </div>
 
-  <script type="module" src="main.js"></script>
+  <link rel="stylesheet" href="style.css?v=3.0.1" />
+  <script type="module" src="main.js?v=3.0.1"></script>
 </body>
 </html>

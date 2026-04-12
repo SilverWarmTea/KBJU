@@ -19,14 +19,6 @@ export async function apiAddFood(payload) {
   return j.data;
 }
 
-export async function apiIncrementFoodStatus(id) {
-  const r = await fetch(`${FN_BASE}/foods/${encodeURIComponent(id)}/status`, {
-    method: "POST",
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(JSON.stringify(j));
-  return j.data;
-}
 
 export async function apiGetCurrentItems() {
   const r = await fetch(`${FN_BASE}/current-items`, { method: "GET" });

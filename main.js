@@ -1,4 +1,5 @@
 import { setHint } from "./utils.js";
+import { state } from "./state.js";
 
 window.addEventListener("error", (e) => {
   setHint("JS error: " + (e.message || "unknown"));
@@ -11,10 +12,10 @@ window.addEventListener("unhandledrejection", (e) => {
 import { dom } from "./dom.js";
 import { render } from "./render.js";
 import { copyTotalsToClipboard } from "./clipboard.js";
-import { initPresets } from "./presets.js";
 import { loadRowsFromDB } from "./db.js";
-
-import { syncWeightDisabled, onAdd, onClear, onChoosePreset, onListClick, onPresetListClick } from "./handlers.js";
+import { syncWeightDisabled, onAdd, onClear, onListClick } from "./handlers.js";
+import { extractCompanies } from "./db.js";
+import { loadPresetsFromDB } from "./db.js";
 
 init();
 
@@ -24,15 +25,16 @@ async function init() {
   dom.perPortion?.addEventListener("change", syncWeightDisabled);
   syncWeightDisabled();
 
+  state.presets = await loadPresetsFromDB();
+
+  const companies = extractCompanies(state.presets);
+
+  dom.companyList.innerHTML = companies
+  .map(c => `<option value="${c}">`)
+  .join("");
+
   dom.add?.addEventListener("click", onAdd);
   dom.clear?.addEventListener("click", onClear);
-
-  if (dom.preset) {
-    await initPresets();
-    dom.choose?.addEventListener("click", onChoosePreset);
-  }
-
-  dom.presetList?.addEventListener("click", onPresetListClick);
   dom.list?.addEventListener("click", onListClick);
 
   try {
