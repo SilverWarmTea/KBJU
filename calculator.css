@@ -1,0 +1,110 @@
+.calc-rows{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calc-row{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.calc-row .calc-name{
+  flex: 2 1 260px;
+  min-width: 180px;
+}
+
+.calc-row .calc-k,
+.calc-row .calc-b,
+.calc-row .calc-j,
+.calc-row .calc-u,
+.calc-row .calc-w{
+  flex: 1 1 110px;
+  min-width: 90px;
+}
+
+.calc-row input{
+  margin: 0;
+  width: 100%;
+}
+
+.calc-add-wrap{
+  margin-top: 14px;
+}
+
+.calc-result-row{
+  margin-bottom: 12px;
+}
+
+.calc-result-grid{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+#addCalcRow:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#addCalcRow:disabled:active{
+  transform: none;
+}
+
+@media (max-width: 900px) {
+  .calc-row{
+    flex-wrap: wrap;
+  }
+
+  .calc-row .calc-name{
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .calc-row .calc-k,
+  .calc-row .calc-b,
+  .calc-row .calc-j,
+  .calc-row .calc-u,
+  .calc-row .calc-w{
+    flex: 1 1 calc(50% - 5px);
+    min-width: 140px;
+  }
+
+  .calc-result-grid{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 🔥 фикс для flex строки */
+.calc-row input{
+  width: auto !important;
+  flex: 1 1 110px;
+}
+
+.calc-row .calc-name{
+  flex: 2 1 260px;
+}
+
+.calc-row input{
+  min-width: 80px;
+}
+
+.calc-heat-row{
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.calc-heat-check{
+  height: 48px;
+}
+
+@media (max-width: 720px) {
+  .calc-heat-row{
+    grid-template-columns: 1fr;
+  }
+}
