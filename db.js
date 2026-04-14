@@ -6,7 +6,10 @@ import {
   apiGetCurrentItems,
   apiAddCurrentItem,
   apiClearCurrentItems,
-  apiDeleteCurrentItem
+  apiDeleteCurrentItem,
+  apiGetStocks,
+  apiConsumeStock,
+  apiAddStock
 } from "./apiClient.js";
 
 /**
@@ -148,4 +151,56 @@ export function extractCompanies(presets) {
   )].sort((a, b) =>
     a.localeCompare(b, "ru", { sensitivity: "base" })
   );
+}
+
+export async function loadStocksFromDB() {
+  try {
+    const data = await apiGetStocks();
+
+    return (data ?? [])
+      .map(x => ({
+        id: x.id,
+        food_id: x.food_id ?? null,
+        name: String(x.name ?? "").trim(),
+        company: normalizeCompany(x.company),
+        k: Number(x.k),
+        b: Number(x.b),
+        j: Number(x.j),
+        u: Number(x.u),
+        per_weight_g: Number(x.per_weight_g) || 100,
+        stock_g: Number(x.stock_g) || 0,
+      }))
+      .filter(x => x.name);
+  } catch (e) {
+    console.error(e);
+    setHint("Ошибка загрузки stocks (API)");
+    return [];
+  }
+}
+
+export async function consumeStockInDB(stock, amountG) {
+  const res = await apiConsumeStock(stock.id, amountG);
+
+  await saveRowToDB(
+    { k: stock.k, b: stock.b, j: stock.j, u: stock.u },
+    amountG,
+    false,
+    stock.name
+  );
+
+  return res;
+}
+
+export async function addStockToDB(stock) {
+  return await apiAddStock({
+    food_id: stock.food_id ?? null,
+    name: stock.name,
+    company: stock.company ?? null,
+    k: stock.k,
+    b: stock.b,
+    j: stock.j,
+    u: stock.u,
+    per_weight_g: stock.per_weight_g ?? 100,
+    stock_g: stock.stock_g,
+  });
 }

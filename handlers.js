@@ -229,12 +229,13 @@ export function onQuickInputCommit() {
 
 function parseQuickInput(text) {
   const normalized = String(text)
+    .replace(/\|/g, " ")
     .replace(/,/g, ".")
     .replace(/\s+/g, " ")
     .trim();
 
   const read = (letter) => {
-    const re = new RegExp(`${letter}\\s*([0-9]+(?:\\.[0-9]+)?)`, "i");
+    const re = new RegExp(`(?:^|\\s)${letter}\\s*:??\\s*([0-9]+(?:\\.[0-9]+)?)`, "i");
     const m = normalized.match(re);
     return m ? Number(m[1]) : null;
   };
@@ -243,7 +244,9 @@ function parseQuickInput(text) {
   const b = read("Б");
   const j = read("Ж");
   const u = read("У");
-  const weight = read("В");
+
+  const hasWeight = /(?:^|\s)(В|Вес|Масса)\s*:??/i.test(normalized);
+  const weight = hasWeight ? read("В") : null;
 
   if ([k, b, j, u].some(v => v == null || !Number.isFinite(v))) {
     return null;
@@ -251,4 +254,3 @@ function parseQuickInput(text) {
 
   return { k, b, j, u, weight };
 }
-

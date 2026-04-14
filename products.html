@@ -4,17 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Продукты</title>
-  <link rel="stylesheet" href="style.css?v=2.8.0" />
+  <link rel="stylesheet" href="style.css?v=4.0.0" />
+  <link rel="stylesheet" href="products.css?v=4.0.0" />
 </head>
 <body>
   <div class="app">
     <h1>Продукты</h1>
 
     <div class="card action-panel">
-      <div class="toolbar">
-        <a class="page-link" href="./index.html">← На главную</a>
+      <div class="toolbar main-toolbar">
+        <a class="page-link" href="./index.html">Главная</a>
+        <span class="page-link page-link-current">Продукты</span>
+        <a class="page-link" href="./stocks.html">Запасы</a>
+        <a class="page-link" href="./calculator.html">Калькулятор</a>
       </div>
-      <p class="hint" id="hint">Нажми на продукт — он добавится в результаты.</p>
+      <p class="hint main-menu-hint">Нажми на продукт — он добавится в результаты.</p>
     </div>
 
     <div class="card products-page-card">
@@ -44,7 +48,6 @@
     </div>
   </div>
 
-  <link rel="stylesheet" href="style.css?v=3.0.2" />
   <script type="module" src="productsPage.js?v=3.0.2Ы"></script>
 </body>
 </html>

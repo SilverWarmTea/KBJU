@@ -11,6 +11,12 @@
   align-items: center;
 }
 
+.calc-row input{
+  margin: 0;
+  width: auto !important;
+  min-width: 80px;
+}
+
 .calc-row .calc-name{
   flex: 2 1 260px;
   min-width: 180px;
@@ -23,11 +29,6 @@
 .calc-row .calc-w{
   flex: 1 1 110px;
   min-width: 90px;
-}
-
-.calc-row input{
-  margin: 0;
-  width: 100%;
 }
 
 .calc-add-wrap{
@@ -53,6 +54,27 @@
   transform: none;
 }
 
+.calc-heat-row{
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.calc-heat-check{
+  height: 48px;
+}
+
+.calc-save-bottom{
+  margin-top: 16px;
+}
+
+.calc-save-bottom .btn{
+  height: 52px;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .calc-row{
     flex-wrap: wrap;
@@ -75,32 +97,6 @@
   .calc-result-grid{
     grid-template-columns: 1fr 1fr;
   }
-}
-
-/* 🔥 фикс для flex строки */
-.calc-row input{
-  width: auto !important;
-  flex: 1 1 110px;
-}
-
-.calc-row .calc-name{
-  flex: 2 1 260px;
-}
-
-.calc-row input{
-  min-width: 80px;
-}
-
-.calc-heat-row{
-  display: grid;
-  grid-template-columns: 1fr 220px;
-  gap: 10px;
-  margin-bottom: 12px;
-  align-items: center;
-}
-
-.calc-heat-check{
-  height: 48px;
 }
 
 @media (max-width: 720px) {

@@ -1,0 +1,164 @@
+.app-shell{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  width: 100%;
+}
+
+.main-column{
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-input-row{
+  margin-bottom: 10px;
+}
+
+.title-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.inputs{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.weight-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 10px;
+}
+
+.weight-row > input,
+.weight-row > label{
+  height: var(--control-h);
+}
+
+.add-wrap{
+  margin-top: 12px;
+}
+
+.results-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.results-head h2{
+  margin: 0;
+}
+
+.results-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.results-actions .btn{
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results-actions .btn.ghost{
+  background: linear-gradient(
+    135deg,
+    rgba(120, 100, 255, 0.35),
+    rgba(80, 160, 255, 0.25)
+  );
+  border: 1px solid rgba(140, 130, 255, 0.45);
+  color: #fff;
+}
+
+.totals-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 10px 0 14px;
+}
+
+#list{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.item-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.item-title{
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.item-sub{
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.item-actions{
+  display: flex;
+  gap: 8px;
+}
+
+.macro-grid{
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .totals-grid{
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .total-card{
+    padding: 12px;
+    min-height: 110px;
+  }
+}
+
+@media (min-width: 720px) {
+  .inputs{
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 900px) {
+  .totals-grid{
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .total-card{
+    min-height: 120px;
+  }
+}

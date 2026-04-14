@@ -54,3 +54,34 @@ export async function apiDeleteCurrentItem(id) {
   if (!r.ok) throw new Error(JSON.stringify(j));
   return true;
 }
+
+export async function apiGetStocks() {
+  const r = await fetch(`${FN_BASE}/stocks`, { method: "GET" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j.data || [];
+}
+
+export async function apiConsumeStock(id, amountG) {
+  const r = await fetch(`${FN_BASE}/stocks/${encodeURIComponent(id)}/consume`, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify({ amount_g: amountG }),
+  });
+
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j;
+}
+
+export async function apiAddStock(payload) {
+  const r = await fetch(`${FN_BASE}/stocks`, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify(payload),
+  });
+
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j.data;
+}

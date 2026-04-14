@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Запасы</title>
+    <link rel="stylesheet" href="style.css?v=4.0.0" />
+    <link rel="stylesheet" href="stocks.css?v=4.0.0" />
+</head>
+<body>
+  <div class="app">
+    <h1>Запасы</h1>
+
+    <div class="card action-panel">
+        <div class="toolbar main-toolbar">
+            <a class="page-link" href="./index.html">Главная</a>
+            <a class="page-link" href="./products.html">Продукты</a>
+            <span class="page-link page-link-current">Запасы</span>
+            <a class="page-link" href="./calculator.html">Калькулятор</a>
+        </div>
+        <p class="hint main-menu-hint" id="stocksHint">Введи массу в граммах или количество в формате x2 / 2шт.</p>
+    </div>
+
+    <div class="card">
+      <div id="stocksList" class="stocks-list"></div>
+    </div>
+  </div>
+
+  <script type="module" src="stocks.js?v=3.2.0"></script>
+</body>
+</html>

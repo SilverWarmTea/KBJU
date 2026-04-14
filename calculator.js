@@ -1,3 +1,5 @@
+import { addStockToDB } from "./db.js";
+
 function safeNum(x) {
   const n = Number(String(x ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
@@ -11,6 +13,8 @@ const rowsEl = document.getElementById("calcRows");
 const addBtn = document.getElementById("addCalcRow");
 const heatTreatmentEl = document.getElementById("heatTreatment");
 const cookedWeightEl = document.getElementById("cookedWeight");
+const resultTitleEl = document.getElementById("resultTitle");
+const saveToStocksBtn = document.getElementById("saveToStocks");
 
 const resultEls = {
   k: document.getElementById("resultK"),
@@ -31,6 +35,8 @@ function init() {
 
   heatTreatmentEl?.addEventListener("change", onHeatTreatmentChange);
   cookedWeightEl?.addEventListener("input", recalc);
+
+  saveToStocksBtn?.addEventListener("click", onSaveToStocks);
 
   recalc();
   updateAddButtonState();
@@ -119,7 +125,7 @@ function updateAddButtonState() {
   addBtn.disabled = !isLastRowComplete();
 }
 
-function recalc() {
+function calculateTotals() {
   const rows = [...document.querySelectorAll(".calc-row")];
 
   let totalK = 0;
@@ -153,9 +159,59 @@ function recalc() {
     }
   }
 
-  resultEls.k.textContent = round1(totalK).toFixed(1);
-  resultEls.b.textContent = round1(totalB).toFixed(1);
-  resultEls.j.textContent = round1(totalJ).toFixed(1);
-  resultEls.u.textContent = round1(totalU).toFixed(1);
-  resultEls.w.textContent = String(Math.round(finalWeight));
+  return {
+    totalK: round1(totalK),
+    totalB: round1(totalB),
+    totalJ: round1(totalJ),
+    totalU: round1(totalU),
+    finalWeight: Math.round(finalWeight),
+  };
+}
+
+function recalc() {
+  const totals = calculateTotals();
+
+  resultEls.k.textContent = totals.totalK.toFixed(1);
+  resultEls.b.textContent = totals.totalB.toFixed(1);
+  resultEls.j.textContent = totals.totalJ.toFixed(1);
+  resultEls.u.textContent = totals.totalU.toFixed(1);
+  resultEls.w.textContent = String(totals.finalWeight);
+}
+
+async function onSaveToStocks() {
+  const title = String(resultTitleEl?.value ?? "").trim();
+  if (!title) {
+    alert("Сначала укажи название блюда.");
+    return;
+  }
+
+  const totals = calculateTotals();
+
+  if (totals.finalWeight <= 0) {
+    alert("Итоговый вес должен быть больше 0.");
+    return;
+  }
+
+  const per100K = round1((totals.totalK * 100) / totals.finalWeight);
+  const per100B = round1((totals.totalB * 100) / totals.finalWeight);
+  const per100J = round1((totals.totalJ * 100) / totals.finalWeight);
+  const per100U = round1((totals.totalU * 100) / totals.finalWeight);
+
+  try {
+    await addStockToDB({
+      name: title,
+      company: null,
+      k: per100K,
+      b: per100B,
+      j: per100J,
+      u: per100U,
+      per_weight_g: 100,
+      stock_g: totals.finalWeight,
+    });
+
+    window.location.href = "./stocks.html";
+  } catch (err) {
+    console.error(err);
+    alert("Не удалось сохранить в запасы.");
+  }
 }

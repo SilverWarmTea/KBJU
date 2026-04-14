@@ -4,19 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Калькулятор блюда</title>
-  <link rel="stylesheet" href="style.css?v=3.1.3" />
-    <link rel="stylesheet" href="calculator.css?v=3.1.3" />
+  <link rel="stylesheet" href="style.css?v=4.0.0" />
+  <link rel="stylesheet" href="calculator.css?v=4.0.0" />
 </head>
 <body>
   <div class="app">
     <h1>Калькулятор блюда</h1>
 
     <div class="card action-panel">
-      <div class="toolbar">
-        <a class="page-link" href="./index.html">← На главную</a>
+      <div class="toolbar main-toolbar">
+        <a class="page-link" href="./index.html">Главная</a>
         <a class="page-link" href="./products.html">Продукты</a>
+        <a class="page-link" href="./stocks.html">Запасы</a>
+        <span class="page-link page-link-current">Калькулятор</span>
       </div>
-      <p class="hint">Вводи ингредиенты построчно. Итог считается автоматически.</p>
+      <p class="hint main-menu-hint">Вводи ингредиенты построчно. Итог считается автоматически.</p>
     </div>
 
     <div class="card">
@@ -58,6 +60,7 @@
 </div>
 
       <div class="calc-result-grid">
+        
         <div class="macro-pill">
           <div class="macro-left">🔥 Калории</div>
           <div class="macro-val" id="resultK">0.0</div>
@@ -83,7 +86,11 @@
           <div class="macro-val" id="resultW">0</div>
         </div>
       </div>
+      <div class="calc-save-wrap">
+          <button id="saveToStocks" class="btn ghost" type="button">Перенести в запасы</button>
+        </div>
     </div>
+    
   </div>
 
   <script type="module" src="calculator.js?v=3.1.3"></script>
