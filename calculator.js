@@ -1,4 +1,4 @@
-import { addStockToDB } from "./db.js";
+import { addStockV2ToDB } from "./db.js";
 
 function safeNum(x) {
   const n = Number(String(x ?? "").replace(",", "."));
@@ -198,15 +198,17 @@ async function onSaveToStocks() {
   const per100U = round1((totals.totalU * 100) / totals.finalWeight);
 
   try {
-    await addStockToDB({
+   await addStockV2ToDB({
       name: title,
-      company: null,
+      company: "Домашняя",
       k: per100K,
       b: per100B,
       j: per100J,
       u: per100U,
-      per_weight_g: 100,
-      stock_g: totals.finalWeight,
+      calc_mode: "weight",
+      base_amount: 100,
+      base_unit: "g",
+      stock_amount: totals.finalWeight
     });
 
     window.location.href = "./stocks.html";

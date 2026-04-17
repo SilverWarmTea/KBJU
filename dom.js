@@ -37,4 +37,6 @@ copyPreview: document.getElementById("copyPreview"),
   sumB: document.getElementById("sumB"),
   sumJ: document.getElementById("sumJ"),
   sumU: document.getElementById("sumU"),
+  modeWeight: document.getElementById("modeWeight"),
+  modeUnit: document.getElementById("modeUnit"),
 };

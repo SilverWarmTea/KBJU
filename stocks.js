@@ -1,4 +1,5 @@
-import { loadStocksFromDB, consumeStockInDB } from "./db.js";
+import { loadStocksV2FromDB, consumeStockV2InDB } from "./db.js";
+import { renderProductCard } from "./product-card.js";
 
 const listEl = document.getElementById("stocksList");
 const hintEl = document.getElementById("stocksHint");
@@ -10,10 +11,11 @@ init();
 async function init() {
   await reloadStocks();
   listEl?.addEventListener("keydown", onStocksKeydown);
+  listEl?.addEventListener("click", onStocksClick);
 }
 
 async function reloadStocks() {
-  stocks = await loadStocksFromDB();
+  stocks = await loadStocksV2FromDB();
   renderStocks();
 }
 
@@ -27,46 +29,50 @@ function renderStocks() {
 
   listEl.innerHTML = stocks
     .map((s, i) => {
-      const companyText = s.company ? `Фирма: ${escapeHtml(s.company)}` : "Без фирмы";
+      const modeText = "Режим: по весу";
+      const baseText = `База: ${fmt1(s.per_weight_g || 100)} г`;
+
+      const extraTitle = "Запасы";
+      const extraText =
+        s.calc_mode === "unit"
+          ? `Осталось: ${s.stock_amount} шт`
+          : `Осталось: ${s.stock_amount} г`;
 
       return `
-        <div class="stock-card" data-stock-idx="${i}">
-          <div class="stock-head">
-            <div>
-              <div class="stock-title">${escapeHtml(s.name)}</div>
-              <div class="stock-sub">${companyText}</div>
-              <div class="stock-sub">Остаток: ${fmt1(s.stock_g)} г</div>
-            </div>
-          </div>
-
-          <div class="stock-macro-grid">
-            <div class="stock-macro-pill stock-k">
-              <span class="stock-macro-left">🔥 Калории</span>
-              <span class="stock-macro-val">${fmt1(s.k)}</span>
-            </div>
-            <div class="stock-macro-pill stock-b">
-              <span class="stock-macro-left">💪 Белки</span>
-              <span class="stock-macro-val">${fmt1(s.b)}</span>
-            </div>
-            <div class="stock-macro-pill stock-j">
-              <span class="stock-macro-left">🥑 Жиры</span>
-              <span class="stock-macro-val">${fmt1(s.j)}</span>
-            </div>
-            <div class="stock-macro-pill stock-u">
-              <span class="stock-macro-left">🌾 Углеводы</span>
-              <span class="stock-macro-val">${fmt1(s.u)}</span>
-            </div>
-          </div>
-
-          <div class="stock-bottom">
-            <div class="stock-portion">Базовая порция: ${fmt1(s.per_weight_g)} г</div>
-            <input
-              type="text"
-              class="stock-consume-input"
-              placeholder="Списать: 200 или x2"
-              data-consume-idx="${i}"
-            />
-          </div>
+        <div class="stock-item-wrap">
+          ${renderProductCard(
+            {
+              name: s.name,
+              company: s.company ?? null,
+              k: fmt1(s.k),
+              b: fmt1(s.b),
+              j: fmt1(s.j),
+              u: fmt1(s.u),
+              modeText,
+              baseText,
+              extraTitle,
+              extraText
+            },
+            {
+  actionPanel: `
+    <div class="product-card__inline-action">
+      <input
+        type="text"
+        class="stock-consume-input"
+        placeholder="200 или x2"
+        data-consume-idx="${i}"
+      />
+      <button
+        type="button"
+        class="product-card__action-btn"
+        data-action="consume:${i}"
+      >
+        Списать
+      </button>
+    </div>
+  `
+}
+          )}
         </div>
       `;
     })
@@ -93,17 +99,15 @@ async function onStocksKeydown(e) {
 
   try {
     await consumeStockInDB(stock, amountG);
-
-    // редирект на главную
     window.location.href = "./index.html";
   } catch (err) {
     console.error(err);
-     const msg = String(err?.message || "");
-  if (msg.includes("not enough stock")) {
-    setHint("Нельзя списать больше, чем есть в запасе 😕");
-  } else {
-    setHint("Не удалось списать запас 😕");
-  }
+    const msg = String(err?.message || "");
+    if (msg.includes("not enough stock")) {
+      setHint("Нельзя списать больше, чем есть в запасе 😕");
+    } else {
+      setHint("Не удалось списать запас 😕");
+    }
   }
 }
 
@@ -147,4 +151,47 @@ function escapeHtml(s) {
     '"': "&quot;",
     "'": "&#039;",
   }[c]));
+}
+
+function onStocksClick(e) {
+  const btn = e.target instanceof Element ? e.target.closest("[data-action]") : null;
+  if (!btn) return;
+
+  const raw = btn.getAttribute("data-action") || "";
+  const [kind, idxText] = raw.split(":");
+  const idx = Number(idxText);
+
+  if (kind === "consume") {
+    handleConsume(idx);
+    return;
+  }
+}
+
+async function handleConsume(idx) {
+  if (!Number.isFinite(idx) || !stocks[idx]) return;
+
+  const stock = stocks[idx];
+  const input = listEl?.querySelector(`[data-consume-idx="${idx}"]`);
+  if (!(input instanceof HTMLInputElement)) return;
+
+  const raw = String(input.value ?? "").trim();
+  const amountG = parseConsumeInput(raw, stock.per_weight_g);
+
+  if (!amountG || amountG <= 0) {
+    setHint("Не понял количество. Пример: 200 или x2");
+    return;
+  }
+
+  try {
+    await consumeStockV2InDB(stock, amountG);
+    window.location.href = "./index.html";
+  } catch (err) {
+    console.error(err);
+    const msg = String(err?.message || "");
+    if (msg.includes("not enough stock")) {
+      setHint("Нельзя списать больше, чем есть в запасе 😕");
+    } else {
+      setHint("Не удалось списать запас 😕");
+    }
+  }
 }

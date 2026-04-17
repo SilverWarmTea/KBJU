@@ -1,4 +1,12 @@
-import { loadPresetsFromDB, saveRowToDB } from "./db.js";
+import {
+  loadFoodsV2FromDB,
+  addCurrentItemV2ToDB,
+  loadStocksV2FromDB,
+  addStockV2ToDB,
+  addAmountToStockV2
+} from "./db.js";
+
+import { renderProductCard } from "./product-card.js";
 
 const listEl = document.getElementById("productsList");
 const hintEl = document.getElementById("hint");
@@ -7,12 +15,15 @@ const companyEl = document.getElementById("productsCompany");
 
 let presets = [];
 let filteredPresets = [];
+let stocks = [];
 
 init();
 
 async function init() {
   try {
-    presets = await loadPresetsFromDB();
+    presets = await loadFoodsV2FromDB();
+    stocks = await loadStocksV2FromDB();
+
     renderCompanyOptions();
     applyFilters();
   } catch (e) {
@@ -22,155 +33,130 @@ async function init() {
 
   listEl?.addEventListener("click", onProductsClick);
   searchEl?.addEventListener("input", applyFilters);
-  searchEl?.addEventListener("keydown", onSearchKeydown);
   companyEl?.addEventListener("change", applyFilters);
 }
 
-function onSearchKeydown(e) {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    applyFilters();
-  }
-}
-
 function renderCompanyOptions() {
-  if (!companyEl) return;
-
-  const uniqueCompanies = [...new Set(
-    presets
-      .map(p => p.company)
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, "ru", { sensitivity: "base" }))
+  const companies = [...new Set(
+    presets.map(p => p.company).filter(Boolean)
   )];
 
   companyEl.innerHTML = `
     <option value="__all__">Все</option>
     <option value="__none__">Без фирмы</option>
-    ${uniqueCompanies.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join("")}
+    ${companies.map(c => `<option value="${c}">${c}</option>`).join("")}
   `;
 }
 
 function applyFilters() {
-  const query = normalizeText(searchEl?.value ?? "");
-  const companyValue = companyEl?.value ?? "__all__";
+  const query = (searchEl?.value || "").toLowerCase().trim();
+  const company = companyEl?.value ?? "__all__";
 
-  filteredPresets = presets.filter((p) => {
-    const matchesSearch = !query || normalizeText(p.name).includes(query);
+  filteredPresets = presets.filter(p => {
+    const matchSearch = !query || p.name.toLowerCase().includes(query);
 
-    let matchesCompany = true;
-    if (companyValue === "__none__") {
-      matchesCompany = !p.company;
-    } else if (companyValue !== "__all__") {
-      matchesCompany = p.company === companyValue;
-    }
+    let matchCompany = true;
+    if (company === "__none__") matchCompany = !p.company;
+    else if (company !== "__all__") matchCompany = p.company === company;
 
-    return matchesSearch && matchesCompany;
+    return matchSearch && matchCompany;
   });
 
   renderProducts();
 }
 
 function renderProducts() {
-  if (!listEl) return;
+  listEl.innerHTML = filteredPresets.map((p, i) => {
 
-  if (!filteredPresets.length) {
-    listEl.innerHTML = `<div class="preset-empty">Ничего не найдено.</div>`;
-    return;
-  }
+    const modeText =
+      p.calc_mode === "unit"
+        ? "Режим: поштучно"
+        : "Режим: по весу";
 
-  listEl.innerHTML = filteredPresets
-    .map((p, i) => {
-      const weight = `Вес по умолчанию: ${Number(p.per_weight_g) || 100} г`;
-      const company = p.company ? `Фирма: ${escapeHtml(p.company)}` : `Без фирмы`;
+    const baseText =
+      p.calc_mode === "unit"
+        ? `База: ${p.base_amount} шт`
+        : `База: ${p.base_amount} г`;
 
-      return `
-        <button class="product-item" type="button" data-product-item="${i}">
-          <div class="product-item-top">
-            <span class="product-item-name">${escapeHtml(p.name)}</span>
-            <span class="product-item-sub">${weight}</span>
-          </div>
-
-          <div class="product-item-company">${company}</div>
-
-          <div class="product-macro-grid">
-            <div class="product-macro-pill product-k">
-              <span class="product-macro-left">🔥 Калории</span>
-              <span class="product-macro-val">${fmt1(p.k)}</span>
-            </div>
-            <div class="product-macro-pill product-b">
-              <span class="product-macro-left">💪 Белки</span>
-              <span class="product-macro-val">${fmt1(p.b)}</span>
-            </div>
-            <div class="product-macro-pill product-j">
-              <span class="product-macro-left">🥑 Жиры</span>
-              <span class="product-macro-val">${fmt1(p.j)}</span>
-            </div>
-            <div class="product-macro-pill product-u">
-              <span class="product-macro-left">🌾 Углеводы</span>
-              <span class="product-macro-val">${fmt1(p.u)}</span>
-            </div>
-          </div>
-        </button>
-      `;
-    })
-    .join("");
+    return renderProductCard(
+      {
+        name: p.name,
+        company: p.company,
+        k: p.k,
+        b: p.b,
+        j: p.j,
+        u: p.u,
+        modeText,
+        baseText,
+        extraTitle: "Продукт",
+        extraText: ""
+      },
+      {
+        actions: [
+          { label: "В лист", action: `add:${i}` },
+          { label: "В запас", action: `stock:${i}` }
+        ]
+      }
+    );
+  }).join("");
 }
 
 async function onProductsClick(e) {
-  const item = e.target instanceof Element ? e.target.closest("[data-product-item]") : null;
-  if (!item) return;
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
 
-  const idx = parseInt(item.getAttribute("data-product-item"), 10);
-  if (!Number.isFinite(idx) || !filteredPresets[idx]) return;
+  const [kind, idxText] = btn.dataset.action.split(":");
+  const p = filteredPresets[Number(idxText)];
+  if (!p) return;
 
-  const p = filteredPresets[idx];
-
-  try {
-    await saveRowToDB(
-      { k: p.k, b: p.b, j: p.j, u: p.u },
-      Number(p.per_weight_g) || 100,
-      false,
-      p.name,
-      p.company ?? null
-    );
+  // 👉 В ЛИСТ
+  if (kind === "add") {
+    await addCurrentItemV2ToDB({
+      name: p.name,
+      company: p.company,
+      k: p.k,
+      b: p.b,
+      j: p.j,
+      u: p.u,
+      calc_mode: p.calc_mode,
+      base_amount: p.base_amount,
+      base_unit: p.base_unit,
+      qty_amount: p.calc_mode === "unit" ? 1 : p.base_amount
+    });
 
     window.location.href = "./index.html";
-  } catch (err) {
-    console.error(err);
-    setHint("Не удалось добавить продукт.");
+  }
+
+  // 👉 В ЗАПАС
+  if (kind === "stock") {
+    const existing = stocks.find(s =>
+      s.name === p.name && s.company === p.company
+    );
+
+    const amount = p.calc_mode === "unit" ? 1 : p.base_amount;
+
+    if (existing) {
+      await addAmountToStockV2(existing.id, amount);
+    } else {
+      await addStockV2ToDB({
+        name: p.name,
+        company: p.company,
+        k: p.k,
+        b: p.b,
+        j: p.j,
+        u: p.u,
+        calc_mode: p.calc_mode,
+        base_amount: p.base_amount,
+        base_unit: p.base_unit,
+        stock_amount: amount
+      });
+    }
+
+    setHint("Добавлено в запас ✅");
+    stocks = await loadStocksV2FromDB();
   }
 }
 
-function setHint(text) {
-  if (hintEl) hintEl.textContent = text || "";
-}
-
-function normalizeText(value) {
-  return String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
-}
-
-function safeNum(x) {
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function fmt1(num) {
-  return (Math.round(safeNum(num) * 10) / 10).toFixed(1);
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  }[c]));
-}
-
-function escapeHtmlAttr(s) {
-  return String(s).replace(/"/g, "&quot;");
+function setHint(t) {
+  if (hintEl) hintEl.textContent = t;
 }

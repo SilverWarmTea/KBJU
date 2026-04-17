@@ -85,12 +85,6 @@
   align-items: center;
 }
 
-.stock-portion{
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
 @media (max-width: 720px) {
   .stock-macro-grid{
     grid-template-columns: 1fr 1fr;

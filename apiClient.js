@@ -1,15 +1,18 @@
 export const FN_BASE = "https://qznxqgavwemplturysql.supabase.co/functions/v1/quick-api";
 
-export async function apiGetFoods() {
-  const r = await fetch(`${FN_BASE}/foods`, { method: "GET" });
+/* =========================
+   V2
+========================= */
+
+export async function apiGetFoodsV2() {
+  const r = await fetch(`${FN_BASE}/foods-v2`, { method: "GET" });
   const j = await r.json();
   if (!r.ok) throw new Error(JSON.stringify(j));
   return j.data || [];
 }
 
-export async function apiAddFood(payload) {
-  // важный трюк: text/plain уменьшает шанс CORS-preflight на мобиле
-  const r = await fetch(`${FN_BASE}/foods`, {
+export async function apiAddFoodV2(payload) {
+  const r = await fetch(`${FN_BASE}/foods-v2`, {
     method: "POST",
     headers: { "content-type": "text/plain;charset=UTF-8" },
     body: JSON.stringify(payload),
@@ -19,16 +22,15 @@ export async function apiAddFood(payload) {
   return j.data;
 }
 
-
-export async function apiGetCurrentItems() {
-  const r = await fetch(`${FN_BASE}/current-items`, { method: "GET" });
+export async function apiGetStocksV2() {
+  const r = await fetch(`${FN_BASE}/stocks-v2`, { method: "GET" });
   const j = await r.json();
   if (!r.ok) throw new Error(JSON.stringify(j));
   return j.data || [];
 }
 
-export async function apiAddCurrentItem(payload) {
-  const r = await fetch(`${FN_BASE}/current-items`, {
+export async function apiAddStockV2(payload) {
+  const r = await fetch(`${FN_BASE}/stocks-v2`, {
     method: "POST",
     headers: { "content-type": "text/plain;charset=UTF-8" },
     body: JSON.stringify(payload),
@@ -38,50 +40,60 @@ export async function apiAddCurrentItem(payload) {
   return j.data;
 }
 
-export async function apiClearCurrentItems() {
-  const r = await fetch(`${FN_BASE}/current-items`, { method: "DELETE" });
-  const j = await r.json();
-  if (!r.ok) throw new Error(JSON.stringify(j));
-  return true;
-}
-
-export async function apiDeleteCurrentItem(id) {
-  const r = await fetch(`${FN_BASE}/current-items/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
-
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(JSON.stringify(j));
-  return true;
-}
-
-export async function apiGetStocks() {
-  const r = await fetch(`${FN_BASE}/stocks`, { method: "GET" });
-  const j = await r.json();
-  if (!r.ok) throw new Error(JSON.stringify(j));
-  return j.data || [];
-}
-
-export async function apiConsumeStock(id, amountG) {
-  const r = await fetch(`${FN_BASE}/stocks/${encodeURIComponent(id)}/consume`, {
+export async function apiAddToStockV2(id, amount) {
+  const r = await fetch(`${FN_BASE}/stocks-v2/${encodeURIComponent(id)}/add`, {
     method: "POST",
     headers: { "content-type": "text/plain;charset=UTF-8" },
-    body: JSON.stringify({ amount_g: amountG }),
+    body: JSON.stringify({ amount }),
   });
-
   const j = await r.json();
   if (!r.ok) throw new Error(JSON.stringify(j));
   return j;
 }
 
-export async function apiAddStock(payload) {
-  const r = await fetch(`${FN_BASE}/stocks`, {
+export async function apiConsumeStockV2(id, amount) {
+  const r = await fetch(`${FN_BASE}/stocks-v2/${encodeURIComponent(id)}/consume`, {
+    method: "POST",
+    headers: { "content-type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify({ amount }),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j;
+}
+
+export async function apiGetCurrentItemsV2() {
+  const r = await fetch(`${FN_BASE}/current-items-v2`, { method: "GET" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j.data || [];
+}
+
+export async function apiAddCurrentItemV2(payload) {
+  const r = await fetch(`${FN_BASE}/current-items-v2`, {
     method: "POST",
     headers: { "content-type": "text/plain;charset=UTF-8" },
     body: JSON.stringify(payload),
   });
-
   const j = await r.json();
   if (!r.ok) throw new Error(JSON.stringify(j));
   return j.data;
+}
+
+export async function apiClearCurrentItemsV2() {
+  const r = await fetch(`${FN_BASE}/current-items-v2`, {
+    method: "DELETE",
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j;
+}
+
+export async function apiDeleteCurrentItemV2(id) {
+  const r = await fetch(`${FN_BASE}/current-items-v2/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(JSON.stringify(j));
+  return j;
 }

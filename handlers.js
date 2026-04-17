@@ -1,233 +1,20 @@
-import { dom } from "./dom.js";
 import { state } from "./state.js";
-import { setHint, setHintTemp, round1 } from "./utils.js";
-import { readMacros, readWeight } from "./validation.js";
-import { addRow } from "./rows.js";
 import { render } from "./render.js";
+import { safeNum, setHint, setHintTemp , round1} from "./utils.js";
 import {
-  clearRowsInDB,
-  saveFoodIfNotExists,
-  deleteRowInDB,
-  saveRowToDB
+  clearCurrentItemsV2InDB,
+  addFoodV2ToDB,
+  deleteCurrentItemV2InDB,
+  addCurrentItemV2ToDB
 } from "./db.js";
+import { dom } from "./dom.js";
 
-export function syncWeightDisabled() {
-  const per = !!dom.perPortion?.checked;
-  if (!dom.weight) return;
-
-  dom.weight.disabled = per;
-  if (per) dom.weight.value = "";
+function parseWeight(value) {
+  const n = Number(String(value ?? "").replace(",", ".").trim());
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-export function onAdd() {
-  setHint("");
-
-  const perPortion = !!dom.perPortion?.checked;
-  const label = (dom.title?.value || "").trim();
-  const company = (dom.company?.value || "").trim() || null;
-
-  const macros = readMacros();
-  if (!macros) return;
-
-  const weight = perPortion ? null : readWeight();
-  if (!perPortion && weight == null) return;
-
-  addRow({ macros, weight, label, perPortion, company });
-  render();
-  clearInputs();
-  setHintTemp(`Добавлено: ${label || "без названия"}`);
-}
-
-function clearInputs() {
-  if (dom.title) dom.title.value = "";
-  if (dom.weight) dom.weight.value = "";
-
-  dom.macros.k.value = "";
-  dom.macros.b.value = "";
-  dom.macros.j.value = "";
-  dom.macros.u.value = "";
-
-  if (dom.perPortion) dom.perPortion.checked = false;
-  syncWeightDisabled();
-}
-
-export async function onClear() {
-  state.rows = [];
-  await clearRowsInDB();
-  render();
-  setHint("Очищено.");
-}
-
-async function onSaveAsFood(idx) {
-  const r = state.rows[idx];
-  if (!r) return;
-
-  const name = String(r.label || "").trim();
-  if (!name) {
-    setHintTemp("Нет названия — не сохраняю 😅");
-    return;
-  }
-
-  let per_weight_g = 100;
-  let k = 0, b = 0, j = 0, u = 0;
-
-  if (r.weight === "—") {
-    per_weight_g = 100;
-    k = Number(r.k);
-    b = Number(r.b);
-    j = Number(r.j);
-    u = Number(r.u);
-  } else {
-    const w = Number(r.weight);
-
-    if (!Number.isFinite(w) || w <= 0) {
-      setHintTemp("Странный вес — не сохраняю 😕");
-      return;
-    }
-
-    per_weight_g = w;
-    k = round1((Number(r.k) * 100) / w);
-    b = round1((Number(r.b) * 100) / w);
-    j = round1((Number(r.j) * 100) / w);
-    u = round1((Number(r.u) * 100) / w);
-  }
-
-  try {
-    const res = await saveFoodIfNotExists(
-      {
-        name,
-        company: r.company ?? null,
-        k,
-        b,
-        j,
-        u,
-        per_weight_g
-      },
-      state.presets
-    );
-
-    if (!res.ok) {
-      setHintTemp("Похожий продукт уже есть — не сохранял ✅");
-      return;
-    }
-
-    setHintTemp("Сохранено в продукты 💾");
-  } catch (e) {
-    console.error(e);
-    setHintTemp("Не удалось сохранить 😕");
-  }
-}
-
-export async function onListClick(e) {
-  const t = e.target;
-  if (!(t instanceof Element)) return;
-
-  const save = t.closest("[data-save]");
-  const del = t.closest("[data-del]");
-  const rep = t.closest("[data-repeat]");
-
-  if (save) {
-    const i = parseInt(save.getAttribute("data-save"), 10);
-    if (!Number.isFinite(i) || !state.rows[i]) return;
-    onSaveAsFood(i);
-    return;
-  }
-
-  if (del) {
-    const i = parseInt(del.getAttribute("data-del"), 10);
-    if (!Number.isFinite(i) || !state.rows[i]) return;
-
-    const row = state.rows[i];
-    const id = row?.id;
-
-    if (!id) {
-      setHintTemp("Не могу удалить из базы: у строки нет id 😬");
-      state.rows.splice(i, 1);
-      render();
-      return;
-    }
-
-    try {
-      await deleteRowInDB(id);
-      state.rows.splice(i, 1);
-      render();
-    } catch (err) {
-      console.error(err);
-      setHintTemp("Не удалось удалить из базы 😕");
-    }
-    return;
-  }
-
-  if (rep) {
-    const i = parseInt(rep.getAttribute("data-repeat"), 10);
-    if (!Number.isFinite(i) || !state.rows[i]) return;
-
-    const row = state.rows[i];
-    const duplicated = { ...row };
-
-    state.rows.push(duplicated);
-    render();
-
-    try {
-      const perPortion = duplicated.weight === "—";
-      const weight = perPortion ? null : Number(duplicated.weight);
-
-      let macros;
-
-      if (perPortion) {
-        macros = {
-          k: Number(duplicated.k),
-          b: Number(duplicated.b),
-          j: Number(duplicated.j),
-          u: Number(duplicated.u),
-        };
-      } else {
-        const w = Number(weight);
-        macros = {
-          k: round1((Number(duplicated.k) * 100) / w),
-          b: round1((Number(duplicated.b) * 100) / w),
-          j: round1((Number(duplicated.j) * 100) / w),
-          u: round1((Number(duplicated.u) * 100) / w),
-        };
-      }
-
-     await saveRowToDB(
-  macros,
-  weight,
-  perPortion,
-  String(duplicated.label || "").trim(),
-  duplicated.company ?? null
-);
-    } catch (err) {
-      console.error(err);
-      setHintTemp("Повторилось только локально — в БД не сохранилось 😕");
-    }
-  }
-}
-
-export function onQuickInputCommit() {
-  const raw = String(dom.quickInput?.value || "").trim();
-  if (!raw) return;
-
-  const parsed = parseQuickInput(raw);
-  if (!parsed) {
-    setHintTemp("Не смог разобрать строку 😕");
-    return;
-  }
-
-  dom.macros.k.value = String(parsed.k);
-  dom.macros.b.value = String(parsed.b);
-  dom.macros.j.value = String(parsed.j);
-  dom.macros.u.value = String(parsed.u);
-
-  if (parsed.weight != null && dom.weight && !dom.perPortion?.checked) {
-    dom.weight.value = String(parsed.weight);
-  }
-
-  setHintTemp("КБЖУ подставлены ✅");
-}
-
-function parseQuickInput(text) {
+function parseMacrosString(text) {
   const normalized = String(text)
     .replace(/\|/g, " ")
     .replace(/,/g, ".")
@@ -253,4 +40,200 @@ function parseQuickInput(text) {
   }
 
   return { k, b, j, u, weight };
+}
+
+export function setEditorMode(mode) {
+  state.editorMode = mode === "unit" ? "unit" : "weight";
+
+  if (dom.modeWeight) {
+    dom.modeWeight.classList.toggle("is-active", state.editorMode === "weight");
+  }
+
+  if (dom.modeUnit) {
+    dom.modeUnit.classList.toggle("is-active", state.editorMode === "unit");
+  }
+
+  if (dom.weight) {
+    dom.weight.placeholder =
+      state.editorMode === "unit"
+        ? "Количество (шт)"
+        : "Количество (г)";
+  }
+}
+
+export function syncWeightDisabled() {
+  if (!dom.weight) return;
+
+  dom.weight.placeholder =
+    state.editorMode === "unit"
+      ? "Количество (шт)"
+      : "Количество (г)";
+}
+
+export async function onAdd() {
+  const label = String(dom.title?.value ?? "").trim();
+  const company = String(dom.company?.value ?? "").trim() || null;
+
+  const calcMode = state.editorMode === "unit" ? "unit" : "weight";
+  const qtyAmount = parseWeight(dom.weight?.value);
+
+  const macros = {
+    k: safeNum(dom.macros.k?.value),
+    b: safeNum(dom.macros.b?.value),
+    j: safeNum(dom.macros.j?.value),
+    u: safeNum(dom.macros.u?.value),
+  };
+
+  if (!macros.k && !macros.b && !macros.j && !macros.u) {
+    setHint("Заполни КБЖУ");
+    return;
+  }
+
+  if (qtyAmount == null) {
+    setHint(calcMode === "unit" ? "Укажи количество штук" : "Укажи вес");
+    return;
+  }
+
+  const baseAmount = calcMode === "unit" ? 1 : 100;
+  const baseUnit = calcMode === "unit" ? "piece" : "g";
+
+  const ratio = qtyAmount / baseAmount;
+
+  try {
+    const saved = await addCurrentItemV2ToDB({
+      name: label || "Без названия",
+      company,
+      k: macros.k,
+      b: macros.b,
+      j: macros.j,
+      u: macros.u,
+      calc_mode: calcMode,
+      base_amount: baseAmount,
+      base_unit: baseUnit,
+      qty_amount: qtyAmount
+    });
+
+    state.rows.push({
+      id: saved.id,
+      label: label || "Без названия",
+      company,
+      weight: calcMode === "unit" ? "—" : qtyAmount,
+      k: round1(macros.k * ratio),
+      b: round1(macros.b * ratio),
+      j: round1(macros.j * ratio),
+      u: round1(macros.u * ratio)
+    });
+
+    render();
+    setHintTemp("Добавлено ✅");
+  } catch (e) {
+    console.error("ADD ERROR:", e);
+    setHintTemp(`Не удалось сохранить: ${e?.message || e}`);
+  }
+}
+
+export async function onClear() {
+  state.rows = [];
+  render();
+
+  try {
+    await clearCurrentItemsV2InDB();
+    setHint("Очищено");
+  } catch (e) {
+    console.error(e);
+    setHintTemp("Ошибка очистки");
+  }
+}
+
+export async function onListClick(e) {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const [kind, idxText] = btn.dataset.action.split(":");
+  const i = Number(idxText);
+
+  if (!Number.isFinite(i) || !state.rows[i]) return;
+  const row = state.rows[i];
+
+  if (kind === "delete") {
+    state.rows.splice(i, 1);
+    render();
+
+    try {
+      await deleteCurrentItemV2InDB(row.id);
+    } catch (e) {
+      console.error(e);
+      setHintTemp("Ошибка удаления");
+    }
+    return;
+  }
+
+  if (kind === "repeat") {
+    try {
+      const saved = await addCurrentItemV2ToDB({
+        name: row.label || "Без названия",
+        company: row.company ?? null,
+        k: row.k,
+        b: row.b,
+        j: row.j,
+        u: row.u,
+        calc_mode: row.weight === "—" ? "unit" : "weight",
+        base_amount: row.weight === "—" ? 1 : 100,
+        base_unit: row.weight === "—" ? "piece" : "g",
+        qty_amount: row.weight === "—" ? 1 : row.weight
+      });
+
+      state.rows.push({
+        ...row,
+        id: saved.id
+      });
+
+      render();
+    } catch (e) {
+      console.error(e);
+      setHintTemp("Повтор не сохранился");
+    }
+    return;
+  }
+
+  if (kind === "save") {
+    try {
+      await addFoodV2ToDB({
+        name: row.label || "Без названия",
+        company: row.company ?? null,
+        k: row.k,
+        b: row.b,
+        j: row.j,
+        u: row.u,
+        calc_mode: row.weight === "—" ? "unit" : "weight",
+        base_amount: row.weight === "—" ? 1 : 100,
+        base_unit: row.weight === "—" ? "piece" : "g"
+      });
+
+      setHint("Сохранено в продукты ✅");
+    } catch (e) {
+      console.error(e);
+      setHintTemp("Ошибка сохранения");
+    }
+  }
+}
+
+export function onQuickInputCommit() {
+  const raw = String(dom.quickInput?.value ?? "").trim();
+  if (!raw) return;
+
+  const parsed = parseMacrosString(raw);
+  if (!parsed) {
+    setHint("Не понял строку");
+    return;
+  }
+
+  dom.macros.k.value = parsed.k ?? "";
+  dom.macros.b.value = parsed.b ?? "";
+  dom.macros.j.value = parsed.j ?? "";
+  dom.macros.u.value = parsed.u ?? "";
+
+  if (parsed.weight != null) {
+    dom.weight.value = parsed.weight;
+  }
 }

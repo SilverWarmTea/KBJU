@@ -35,16 +35,6 @@
   margin-top: 14px;
 }
 
-.calc-result-row{
-  margin-bottom: 12px;
-}
-
-.calc-result-grid{
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-}
-
 #addCalcRow:disabled{
   opacity: 0.5;
   cursor: not-allowed;
@@ -54,24 +44,73 @@
   transform: none;
 }
 
+.calc-result-row{
+  margin-bottom: 12px;
+}
+
 .calc-heat-row{
   display: grid;
   grid-template-columns: 1fr 220px;
   gap: 10px;
   margin-bottom: 12px;
-  align-items: center;
+  align-items: stretch;
 }
 
 .calc-heat-check{
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.calc-heat-check span{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#cookedWeight{
   height: 48px;
 }
 
-.calc-save-bottom{
-  margin-top: 16px;
+.calc-result-grid{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 10px;
 }
 
-.calc-save-bottom .btn{
-  height: 52px;
+/* локально переопределяем общие macro-* */
+.calc-result-grid .macro-pill{
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border-radius: 14px;
+}
+
+.calc-result-grid .macro-left{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.calc-result-grid .macro-val{
+  font-weight: 900;
+  font-size: 14px;
+  text-align: right;
+}
+
+.calc-save-wrap{
+  margin-top: 12px;
+}
+
+.calc-save-wrap .btn{
+  min-height: 48px;
+  height: 48px;
   font-weight: 700;
 }
 

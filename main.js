@@ -12,10 +12,19 @@ window.addEventListener("unhandledrejection", (e) => {
 import { dom } from "./dom.js";
 import { render } from "./render.js";
 import { openCopyModal, initCopyModalEvents } from "./clipboard.js";
-import { loadRowsFromDB } from "./db.js";
-import { syncWeightDisabled, onAdd, onClear, onListClick, onQuickInputCommit } from "./handlers.js";
-import { extractCompanies } from "./db.js";
-import { loadPresetsFromDB } from "./db.js";
+import {
+  loadCurrentItemsV2FromDB,
+  extractCompanies,
+  loadFoodsV2FromDB
+} from "./db.js";
+import {
+  syncWeightDisabled,
+  onAdd,
+  onClear,
+  onListClick,
+  onQuickInputCommit,
+  setEditorMode
+} from "./handlers.js";
 
 init();
 
@@ -26,28 +35,32 @@ async function init() {
   dom.perPortion?.addEventListener("change", syncWeightDisabled);
   syncWeightDisabled();
 
-  dom.quickInput?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    onQuickInputCommit();
-  }
-});
+  dom.modeWeight?.addEventListener("click", () => setEditorMode("weight"));
+  dom.modeUnit?.addEventListener("click", () => setEditorMode("unit"));
 
-dom.quickInput?.addEventListener("blur", onQuickInputCommit);
-  state.presets = await loadPresetsFromDB();
+  dom.quickInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onQuickInputCommit();
+    }
+  });
+
+  dom.quickInput?.addEventListener("blur", onQuickInputCommit);
+
+  state.presets = await loadFoodsV2FromDB();
 
   const companies = extractCompanies(state.presets);
 
   dom.companyList.innerHTML = companies
-  .map(c => `<option value="${c}">`)
-  .join("");
+    .map(c => `<option value="${c}">`)
+    .join("");
 
   dom.add?.addEventListener("click", onAdd);
   dom.clear?.addEventListener("click", onClear);
   dom.list?.addEventListener("click", onListClick);
 
   try {
-    await loadRowsFromDB();
+    state.rows = await loadCurrentItemsV2FromDB();
   } catch (e) {
     console.error(e);
     setHint("Ошибка загрузки из БД");

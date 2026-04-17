@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>КБЖУ</title>
-  <link rel="stylesheet" href="style.css?v=4.0.0" />
-  <link rel="stylesheet" href="index.css?v=4.0.0" />
+  <link rel="stylesheet" href="style.css?v=4.2.2" />
+  <link rel="stylesheet" href="index.css?v=4.2.2" />
+  <link rel="stylesheet" href="product-card.css?v=4.2.2" />
+
 </head>
 <body>
   <div class="app">
@@ -26,53 +28,48 @@
   </div>
 
   <!-- НАЗВАНИЕ + КОМПАНИЯ -->
-  <div class="title-row">
-    <input
-      type="text"
-      id="title"
-      placeholder="Название (необязательно)"
-      maxlength="40"
-    />
+  <div class="editor-grid">
+  <div class="editor-inline-input editor-row-full">
+    <span class="editor-ico">🏷️</span>
+    <input id="title" type="text" placeholder="Название" />
+  </div>
 
-    <input
-      type="text"
-      id="company"
-      list="companyList"
-      placeholder="Фирма"
-    />
-
+  <div class="editor-inline-input">
+    <span class="editor-ico">🏢</span>
+    <input id="company" list="companyList" type="text" placeholder="Фирма" />
     <datalist id="companyList"></datalist>
   </div>
 
-          <div class="inputs">
-            <div class="icon-input">
-              <div class="ii-icon">🔥</div>
-              <input type="number" step="0.1" min="0" placeholder="Ккал / 100г" id="k" />
-            </div>
+  <div class="editor-inline-input">
+    <span class="editor-ico">⚖️</span>
+    <input id="weight" type="text" placeholder="Количество (г или шт)" />
+  </div>
 
-            <div class="icon-input">
-              <div class="ii-icon">💪</div>
-              <input type="number" step="0.1" min="0" placeholder="Белки / 100г" id="b" />
-            </div>
+  <div class="editor-row-full editor-mode-row">
+    <button type="button" id="modeWeight" class="editor-mode-btn is-active">По весу</button>
+    <button type="button" id="modeUnit" class="editor-mode-btn">Поштучно</button>
+  </div>
 
-            <div class="icon-input">
-              <div class="ii-icon">🥑</div>
-              <input type="number" step="0.1" min="0" placeholder="Жиры / 100г" id="j" />
-            </div>
+  <div class="editor-inline-input">
+    <span class="editor-ico">🔥</span>
+    <input id="k" type="text" placeholder="Калории" />
+  </div>
 
-            <div class="icon-input">
-              <div class="ii-icon">🌾</div>
-              <input type="number" step="0.1" min="0" placeholder="Углеводы / 100г" id="u" />
-            </div>
-          </div>
+  <div class="editor-inline-input">
+    <span class="editor-ico">💪</span>
+    <input id="b" type="text" placeholder="Белки" />
+  </div>
 
-          <div class="weight-row">
-            <input type="number" min="0" step="1" placeholder="Вес (г)" id="weight" />
-            <label class="checkline inrow">
-              <input type="checkbox" id="perPortion" />
-              <span>На порцию</span>
-            </label>
-          </div>
+  <div class="editor-inline-input">
+    <span class="editor-ico">🥑</span>
+    <input id="j" type="text" placeholder="Жиры" />
+  </div>
+
+  <div class="editor-inline-input">
+    <span class="editor-ico">🌾</span>
+    <input id="u" type="text" placeholder="Углеводы" />
+  </div>
+</div>
 
           <div class="add-wrap">
             <button id="add" class="btn primary btn-full">Добавить</button>
@@ -128,7 +125,6 @@
           </div>
 
           <div id="list"></div>
-        </div>
       </div>
     </div>
   </div>

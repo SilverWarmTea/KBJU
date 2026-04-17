@@ -1,6 +1,7 @@
 import { dom } from "./dom.js";
 import { state } from "./state.js";
-import { escapeHtml, fmt1, safeNum } from "./utils.js";
+import { fmt1, safeNum } from "./utils.js";
+import { renderProductCard } from "./product-card.js";
 
 export function render() {
   if (!dom.list) return;
@@ -23,50 +24,41 @@ export function render() {
 
   dom.list.innerHTML = state.rows
     .map((r, idx) => {
-      const name = (r.label && r.label.trim()) ? escapeHtml(r.label.trim()) : `#${idx + 1}`;
-      const company = r.company ? `Фирма: ${escapeHtml(r.company)}` : "Без фирмы";
-      const per = r.weight === "—";
-      const sub = per ? "Порция" : `Вес: ${r.weight} г`;
+      const name = (r.label && String(r.label).trim())
+        ? String(r.label).trim()
+        : `#${idx + 1}`;
 
-      return `
-        <div class="item-card" data-idx="${idx}">
-          <div class="item-head">
-            <div>
-              <div class="item-title">${name}</div>
-              <div class="item-sub">${company}</div>
-              <div class="item-sub">${sub}</div>
-            </div>
-            <div class="item-actions">
-              <button class="act-btn save" data-save="${idx}" title="Сохранить в список продуктов">
-                <svg viewBox="0 0 24 24" aria-hidden="true" class="ico">
-                  <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h12V6.5L19 8v11z"/>
-                </svg>
-              </button>
-              <button class="act-btn rep" data-repeat="${idx}" title="Повторить">↻</button>
-              <button class="act-btn del" data-del="${idx}" title="Удалить">✕</button>
-            </div>
-          </div>
+      const perPortion = r.weight === "—";
 
-          <div class="macro-grid">
-            <div class="macro-pill">
-              <div class="macro-left">🔥 Ккал</div>
-              <div class="macro-val">${fmt1(r.k)}</div>
-            </div>
-            <div class="macro-pill">
-              <div class="macro-left">💪 Б</div>
-              <div class="macro-val">${fmt1(r.b)}</div>
-            </div>
-            <div class="macro-pill">
-              <div class="macro-left">🥑 Ж</div>
-              <div class="macro-val">${fmt1(r.j)}</div>
-            </div>
-            <div class="macro-pill">
-              <div class="macro-left">🌾 У</div>
-              <div class="macro-val">${fmt1(r.u)}</div>
-            </div>
-          </div>
-        </div>
-      `;
+      const modeText = perPortion ? "Режим: порция" : "Режим: по весу";
+      const baseText = perPortion ? "База: 1 порция" : `База: ${r.weight} г`;
+
+      const extraTitle = "Текущий список";
+      const extraText = perPortion
+        ? "Добавлено как порция"
+        : `Вес: ${r.weight} г`;
+
+      return renderProductCard(
+        {
+          name,
+          company: r.company ?? null,
+          k: fmt1(r.k),
+          b: fmt1(r.b),
+          j: fmt1(r.j),
+          u: fmt1(r.u),
+          modeText,
+          baseText,
+          extraTitle,
+          extraText
+        },
+        {
+          actions: [
+            { label: "Сохранить", action: `save:${idx}` },
+            { label: "Повторить", action: `repeat:${idx}` },
+            { label: "Удалить", action: `delete:${idx}`, variant: "danger" }
+          ]
+        }
+      );
     })
     .join("");
 }
