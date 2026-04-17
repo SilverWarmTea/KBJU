@@ -1,4 +1,4 @@
-import { addStockV2ToDB } from "./db.js";
+import { addStockV2ToDB } from "../shared/db.js";
 
 function safeNum(x) {
   const n = Number(String(x ?? "").replace(",", "."));

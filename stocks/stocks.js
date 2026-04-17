@@ -1,5 +1,5 @@
-import { loadStocksV2FromDB, consumeStockV2InDB } from "./db.js";
-import { renderProductCard } from "./product-card.js";
+import { loadStocksV2FromDB, consumeStockV2InDB } from "../shared/db.js";
+import { renderProductCard } from "../shared/product-card.js";
 
 const listEl = document.getElementById("stocksList");
 const hintEl = document.getElementById("stocksHint");
@@ -98,7 +98,7 @@ async function onStocksKeydown(e) {
   }
 
   try {
-    await consumeStockInDB(stock, amountG);
+    await consumeStockV2InDB(stock, amountG);
     window.location.href = "./index.html";
   } catch (err) {
     console.error(err);

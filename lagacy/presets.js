@@ -1,7 +1,7 @@
-import { dom } from "./dom.js";
-import { state } from "./state.js";
-import { escapeHtml, fmt1, setHint } from "./utils.js";
-import { loadPresetsFromDB } from "./db.js";
+import { dom } from "../shared/dom.js";
+import { state } from "../shared/state.js";
+import { escapeHtml, fmt1, setHint } from "../shared/utils.js";
+import { loadPresetsFromDB } from "../shared/db.js";
 
 function renderPresetSelect() {
   if (!dom.preset) return;

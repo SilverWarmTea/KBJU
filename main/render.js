@@ -1,7 +1,7 @@
-import { dom } from "./dom.js";
-import { state } from "./state.js";
-import { fmt1, safeNum } from "./utils.js";
-import { renderProductCard } from "./product-card.js";
+import { dom } from "../shared/dom.js";
+import { state } from "../shared/state.js";
+import { fmt1, safeNum } from "../shared/utils.js";
+import { renderProductCard } from "../shared/product-card.js";
 
 export function render() {
   if (!dom.list) return;

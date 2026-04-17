@@ -1,5 +1,5 @@
-import { dom } from "./dom.js";
-import { setHintTemp } from "./utils.js";
+import { dom } from "../shared/dom.js";
+import { setHintTemp } from "../shared/utils.js";
 
 function getTotalsText() {
   const k = dom.sumK?.textContent ?? "0.0";

@@ -4,9 +4,9 @@ import {
   loadStocksV2FromDB,
   addStockV2ToDB,
   addAmountToStockV2
-} from "./db.js";
+} from "../shared/db.js";
 
-import { renderProductCard } from "./product-card.js";
+import { renderProductCard } from "../shared/product-card.js";
 
 const listEl = document.getElementById("productsList");
 const hintEl = document.getElementById("hint");

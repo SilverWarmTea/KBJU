@@ -1,4 +1,4 @@
-import { round1 } from "./utils.js";
+import { round1 } from "../shared/utils";
 
 export function calcByWeight(m, w) {
   return {

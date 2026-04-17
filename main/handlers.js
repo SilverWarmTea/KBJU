@@ -1,13 +1,13 @@
-import { state } from "./state.js";
+import { state } from "../shared/state.js";
 import { render } from "./render.js";
-import { safeNum, setHint, setHintTemp , round1} from "./utils.js";
+import { safeNum, setHint, setHintTemp , round1} from "../shared/utils.js";
 import {
   clearCurrentItemsV2InDB,
   addFoodV2ToDB,
   deleteCurrentItemV2InDB,
   addCurrentItemV2ToDB
-} from "./db.js";
-import { dom } from "./dom.js";
+} from "../shared/db.js";
+import { dom } from "../shared/dom.js";
 
 function parseWeight(value) {
   const n = Number(String(value ?? "").replace(",", ".").trim());

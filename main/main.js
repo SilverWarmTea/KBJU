@@ -1,5 +1,5 @@
-import { setHint } from "./utils.js";
-import { state } from "./state.js";
+import { setHint } from "../shared/utils.js";
+import { state } from "../shared/state.js";
 
 window.addEventListener("error", (e) => {
   setHint("JS error: " + (e.message || "unknown"));
@@ -9,14 +9,14 @@ window.addEventListener("unhandledrejection", (e) => {
   setHint("Promise error: " + (e.reason?.message || e.reason || "unknown"));
 });
 
-import { dom } from "./dom.js";
+import { dom } from "../shared/dom.js";
 import { render } from "./render.js";
 import { openCopyModal, initCopyModalEvents } from "./clipboard.js";
 import {
   loadCurrentItemsV2FromDB,
   extractCompanies,
   loadFoodsV2FromDB
-} from "./db.js";
+} from "../shared/db.js";
 import {
   syncWeightDisabled,
   onAdd,

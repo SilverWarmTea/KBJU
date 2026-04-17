@@ -1,6 +1,6 @@
-import { MACRO_KEYS, MACRO_RE, WEIGHT_RE } from "./constants.js";
-import { dom } from "./dom.js";
-import { normalizeNumber, setHint } from "./utils.js";
+import { MACRO_KEYS, MACRO_RE, WEIGHT_RE } from "../constants.js";
+import { dom } from "../shared/dom.js";
+import { normalizeNumber, setHint } from "../shared/utils.js";
 
 export function readMacros() {
   const out = {};
