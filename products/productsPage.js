@@ -124,7 +124,7 @@ async function onProductsClick(e) {
       qty_amount: p.calc_mode === "unit" ? 1 : p.base_amount
     });
 
-    window.location.href = "./index.html";
+    window.location.href = "../main/index.html";
   }
 
   // 👉 В ЗАПАС

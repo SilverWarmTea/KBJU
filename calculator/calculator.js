@@ -211,7 +211,7 @@ async function onSaveToStocks() {
       stock_amount: totals.finalWeight
     });
 
-    window.location.href = "./stocks.html";
+    window.location.href = "../stocks/stocks.html";
   } catch (err) {
     console.error(err);
     alert("Не удалось сохранить в запасы.");

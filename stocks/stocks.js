@@ -99,7 +99,7 @@ async function onStocksKeydown(e) {
 
   try {
     await consumeStockV2InDB(stock, amountG);
-    window.location.href = "./index.html";
+    window.location.href = "../main/index.html";
   } catch (err) {
     console.error(err);
     const msg = String(err?.message || "");
@@ -184,7 +184,7 @@ async function handleConsume(idx) {
 
   try {
     await consumeStockV2InDB(stock, amountG);
-    window.location.href = "./index.html";
+    window.location.href = "../main/index.html";
   } catch (err) {
     console.error(err);
     const msg = String(err?.message || "");
