@@ -291,3 +291,12 @@ export async function setFoodFavoriteV2InDB(id, isFavorite) {
   if (error) throw error;
   return data;
 }
+
+export async function deleteStockV2InDB(id) {
+  const { error } = await sb
+    .from("stocks_v2")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}

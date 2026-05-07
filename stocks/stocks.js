@@ -1,4 +1,8 @@
-import { loadStocksV2FromDB, consumeStockV2InDB } from "../shared/db.js";
+import {
+  loadStocksV2FromDB,
+  consumeStockV2InDB,
+  deleteStockV2InDB
+} from "../shared/db.js";
 import { renderProductCard } from "../shared/product-card.js";
 
 const listEl = document.getElementById("stocksList");
@@ -69,6 +73,13 @@ function renderStocks() {
       >
         Списать
       </button>
+      <button
+  type="button"
+  class="product-card__action-btn"
+  data-action="delete:${i}"
+>
+  Удалить
+</button>
     </div>
   `
 }
@@ -165,6 +176,11 @@ function onStocksClick(e) {
     handleConsume(idx);
     return;
   }
+
+  if (kind === "delete") {
+  handleDeleteStock(idx);
+  return;
+}
 }
 
 async function handleConsume(idx) {
@@ -193,5 +209,26 @@ async function handleConsume(idx) {
     } else {
       setHint("Не удалось списать запас 😕");
     }
+  }
+}
+
+async function handleDeleteStock(idx) {
+  if (!Number.isFinite(idx) || !stocks[idx]) return;
+
+  const stock = stocks[idx];
+
+  const ok = confirm(`Удалить запас "${stock.name}"?`);
+  if (!ok) return;
+
+  try {
+    await deleteStockV2InDB(stock.id);
+
+    stocks = stocks.filter((_, i) => i !== idx);
+    renderStocks();
+
+    setHint("Запас удалён");
+  } catch (err) {
+    console.error(err);
+    setHint("Не удалось удалить запас 😕");
   }
 }
