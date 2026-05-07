@@ -189,3 +189,49 @@
     grid-template-columns: 1fr;
   }
 }
+
+.editor-inline-input{
+  position: relative;
+}
+
+.title-autocomplete{
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.title-autocomplete-item{
+  height: auto;
+  min-height: 54px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title-autocomplete-item:hover{
+  background: rgba(123,97,255,.18);
+}
+
+.tai-name{
+  font-weight: 900;
+}
+
+.tai-meta{
+  color: var(--muted);
+  font-size: 13px;
+}

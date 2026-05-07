@@ -92,3 +92,19 @@
     min-height: 0;
   }
 }
+
+.product-card__inline-action{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.product-amount-input{
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 520px) {
+  .product-card__inline-action{
+    grid-template-columns: 1fr;
+  }
+}

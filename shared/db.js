@@ -1,17 +1,5 @@
+import { sb } from "../supabaseClient.js";
 import { round1, setHint } from "./utils.js";
-import { state } from "./state.js";
-import {
-  apiGetFoodsV2,
-  apiAddFoodV2,
-  apiGetStocksV2,
-  apiAddStockV2,
-  apiAddToStockV2,
-  apiConsumeStockV2,
-  apiGetCurrentItemsV2,
-  apiAddCurrentItemV2,
-  apiClearCurrentItemsV2,
-  apiDeleteCurrentItemV2
-} from "./apiClient.js";
 
 /* =========================
    helpers
@@ -28,31 +16,77 @@ function normalizeCompany(value) {
   return raw;
 }
 
+function normalizeFood(x) {
+  return {
+    id: x.id,
+    name: String(x.name ?? "").trim(),
+    company: normalizeCompany(x.company),
+    k: safeNum(x.k),
+    b: safeNum(x.b),
+    j: safeNum(x.j),
+    u: safeNum(x.u),
+    calc_mode: String(x.calc_mode ?? "weight"),
+    base_amount: safeNum(x.base_amount || 100),
+    base_unit: String(x.base_unit ?? "g"),
+  };
+}
+
+function normalizeStock(x) {
+  return {
+    id: x.id,
+    food_v2_id: x.food_v2_id ?? null,
+    name: String(x.name ?? "").trim(),
+    company: normalizeCompany(x.company),
+    k: safeNum(x.k),
+    b: safeNum(x.b),
+    j: safeNum(x.j),
+    u: safeNum(x.u),
+    calc_mode: String(x.calc_mode ?? "weight"),
+    base_amount: safeNum(x.base_amount || 100),
+    base_unit: String(x.base_unit ?? "g"),
+    stock_amount: safeNum(x.stock_amount),
+  };
+}
+
+function normalizeCurrentItem(x) {
+  const ratio = safeNum(x.qty_amount) / safeNum(x.base_amount || 1);
+
+  return {
+    id: x.id,
+    food_v2_id: x.food_v2_id ?? null,
+    label: String(x.name ?? "").trim(),
+    company: normalizeCompany(x.company),
+    calc_mode: String(x.calc_mode ?? "weight"),
+    base_amount: safeNum(x.base_amount || 100),
+    base_unit: String(x.base_unit ?? "g"),
+    qty_amount: safeNum(x.qty_amount),
+    k: round1(safeNum(x.k) * ratio),
+    b: round1(safeNum(x.b) * ratio),
+    j: round1(safeNum(x.j) * ratio),
+    u: round1(safeNum(x.u) * ratio),
+    weight:
+      String(x.calc_mode ?? "weight") === "weight"
+        ? safeNum(x.qty_amount)
+        : "—",
+  };
+}
+
 /* =========================
-   V2
+   foods_v2
 ========================= */
 
 export async function loadFoodsV2FromDB() {
   try {
-    const data = await apiGetFoodsV2();
+    const { data, error } = await sb
+      .from("foods_v2")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
 
     return (data ?? [])
-      .map((x) => ({
-        id: x.id,
-        name: String(x.name ?? "").trim(),
-        company: normalizeCompany(x.company),
-        k: safeNum(x.k),
-        b: safeNum(x.b),
-        j: safeNum(x.j),
-        u: safeNum(x.u),
-        calc_mode: String(x.calc_mode ?? "weight"),
-        base_amount: safeNum(x.base_amount || 100),
-        base_unit: String(x.base_unit ?? "g"),
-      }))
-      .filter((x) => x.name)
-      .sort((a, b) =>
-        a.name.localeCompare(b.name, "ru", { sensitivity: "base" })
-      );
+      .map(normalizeFood)
+      .filter((x) => x.name);
   } catch (e) {
     console.error(e);
     setHint("Ошибка загрузки foods_v2");
@@ -61,38 +95,41 @@ export async function loadFoodsV2FromDB() {
 }
 
 export async function addFoodV2ToDB(food) {
-  return await apiAddFoodV2({
-    name: food.name,
-    company: food.company ?? null,
-    k: safeNum(food.k),
-    b: safeNum(food.b),
-    j: safeNum(food.j),
-    u: safeNum(food.u),
-    calc_mode: food.calc_mode ?? "weight",
-    base_amount: safeNum(food.base_amount ?? 100),
-    base_unit: food.base_unit ?? "g",
-  });
+  const { data, error } = await sb
+    .from("foods_v2")
+    .insert({
+      name: food.name,
+      company: food.company ?? null,
+      k: safeNum(food.k),
+      b: safeNum(food.b),
+      j: safeNum(food.j),
+      u: safeNum(food.u),
+      calc_mode: food.calc_mode ?? "weight",
+      base_amount: safeNum(food.base_amount ?? 100),
+      base_unit: food.base_unit ?? "g",
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
+
+/* =========================
+   stocks_v2
+========================= */
 
 export async function loadStocksV2FromDB() {
   try {
-    const data = await apiGetStocksV2();
+    const { data, error } = await sb
+      .from("stocks_v2")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
 
     return (data ?? [])
-      .map((x) => ({
-        id: x.id,
-        food_v2_id: x.food_v2_id ?? null,
-        name: String(x.name ?? "").trim(),
-        company: normalizeCompany(x.company),
-        k: safeNum(x.k),
-        b: safeNum(x.b),
-        j: safeNum(x.j),
-        u: safeNum(x.u),
-        calc_mode: String(x.calc_mode ?? "weight"),
-        base_amount: safeNum(x.base_amount || 100),
-        base_unit: String(x.base_unit ?? "g"),
-        stock_amount: safeNum(x.stock_amount),
-      }))
+      .map(normalizeStock)
       .filter((x) => x.name);
   } catch (e) {
     console.error(e);
@@ -102,29 +139,46 @@ export async function loadStocksV2FromDB() {
 }
 
 export async function addStockV2ToDB(stock) {
-  return await apiAddStockV2({
-    food_v2_id: stock.food_v2_id ?? null,
-    name: stock.name,
-    company: stock.company ?? null,
-    k: safeNum(stock.k),
-    b: safeNum(stock.b),
-    j: safeNum(stock.j),
-    u: safeNum(stock.u),
-    calc_mode: stock.calc_mode ?? "weight",
-    base_amount: safeNum(stock.base_amount ?? 100),
-    base_unit: stock.base_unit ?? "g",
-    stock_amount: safeNum(stock.stock_amount ?? 0),
-  });
+  const { data, error } = await sb
+    .from("stocks_v2")
+    .insert({
+      food_v2_id: stock.food_v2_id ?? null,
+      name: stock.name,
+      company: stock.company ?? null,
+      k: safeNum(stock.k),
+      b: safeNum(stock.b),
+      j: safeNum(stock.j),
+      u: safeNum(stock.u),
+      calc_mode: stock.calc_mode ?? "weight",
+      base_amount: safeNum(stock.base_amount ?? 100),
+      base_unit: stock.base_unit ?? "g",
+      stock_amount: safeNum(stock.stock_amount ?? 0),
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export async function addAmountToStockV2(id, amount) {
-  return await apiAddToStockV2(id, safeNum(amount));
+  const { error } = await sb.rpc("add_amount_to_stock_v2", {
+    p_id: id,
+    p_amount: safeNum(amount),
+  });
+
+  if (error) throw error;
 }
 
 export async function consumeStockV2InDB(stock, amount) {
   const amountNum = safeNum(amount);
 
-  const res = await apiConsumeStockV2(stock.id, amountNum);
+  const { error } = await sb.rpc("consume_stock_v2", {
+    p_id: stock.id,
+    p_amount: amountNum,
+  });
+
+  if (error) throw error;
 
   await addCurrentItemV2ToDB({
     food_v2_id: stock.food_v2_id ?? null,
@@ -139,36 +193,22 @@ export async function consumeStockV2InDB(stock, amount) {
     base_unit: stock.base_unit,
     qty_amount: amountNum,
   });
-
-  return res;
 }
+
+/* =========================
+   current_items_v2
+========================= */
 
 export async function loadCurrentItemsV2FromDB() {
   try {
-    const data = await apiGetCurrentItemsV2();
+    const { data, error } = await sb
+      .from("current_items_v2")
+      .select("*")
+      .order("created_at", { ascending: true });
 
-    return (data ?? []).map((x) => {
-      const ratio = safeNum(x.qty_amount) / safeNum(x.base_amount || 1);
+    if (error) throw error;
 
-      return {
-        id: x.id,
-        food_v2_id: x.food_v2_id ?? null,
-        label: String(x.name ?? "").trim(),
-        company: normalizeCompany(x.company),
-        calc_mode: String(x.calc_mode ?? "weight"),
-        base_amount: safeNum(x.base_amount || 100),
-        base_unit: String(x.base_unit ?? "g"),
-        qty_amount: safeNum(x.qty_amount),
-        k: round1(safeNum(x.k) * ratio),
-        b: round1(safeNum(x.b) * ratio),
-        j: round1(safeNum(x.j) * ratio),
-        u: round1(safeNum(x.u) * ratio),
-        weight:
-          String(x.calc_mode ?? "weight") === "weight"
-            ? safeNum(x.qty_amount)
-            : "—",
-      };
-    });
+    return (data ?? []).map(normalizeCurrentItem);
   } catch (e) {
     console.error(e);
     setHint("Ошибка загрузки current_items_v2");
@@ -177,54 +217,77 @@ export async function loadCurrentItemsV2FromDB() {
 }
 
 export async function addCurrentItemV2ToDB(item) {
-  let nextPos = 1;
+  const { data, error } = await sb
+    .from("current_items_v2")
+    .insert({
+      food_v2_id: item.food_v2_id ?? null,
+      name: item.name,
+      company: item.company ?? null,
+      k: safeNum(item.k),
+      b: safeNum(item.b),
+      j: safeNum(item.j),
+      u: safeNum(item.u),
+      calc_mode: item.calc_mode ?? "weight",
+      base_amount: safeNum(item.base_amount ?? 100),
+      base_unit: item.base_unit ?? "g",
+      qty_amount: safeNum(item.qty_amount ?? 1),
+    })
+    .select()
+    .single();
 
-  try {
-    const existing = await apiGetCurrentItemsV2();
-    const maxPos = (existing ?? []).reduce((acc, row) => {
-      const p = Number(row.position) || 0;
-      return Math.max(acc, p);
-    }, 0);
-    nextPos = maxPos + 1;
-  } catch (e) {
-    console.error(e);
-  }
-
-  const payload = {
-  food_v2_id: item.food_v2_id ?? null,
-  name: item.name,
-  company: item.company ?? null,
-  k: safeNum(item.k),
-  b: safeNum(item.b),
-  j: safeNum(item.j),
-  u: safeNum(item.u),
-  calc_mode: item.calc_mode ?? "weight",
-  base_amount: safeNum(item.base_amount ?? 100),
-  base_unit: item.base_unit ?? "g",
-  qty_amount: safeNum(item.qty_amount ?? 1),
-  position: safeNum(item.position ?? nextPos),
-};
-
-console.log("POST current_items_v2 payload:", payload);
-
-return await apiAddCurrentItemV2(payload);
-
+  if (error) throw error;
+  return data;
 }
 
 export async function clearCurrentItemsV2InDB() {
-  return await apiClearCurrentItemsV2();
+  const { error } = await sb
+    .from("current_items_v2")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000");
+
+  if (error) throw error;
 }
 
 export async function deleteCurrentItemV2InDB(id) {
-  return await apiDeleteCurrentItemV2(id);
+  const { error } = await sb
+    .from("current_items_v2")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
 }
+
+/* =========================
+   misc
+========================= */
 
 export function extractCompanies(presets) {
   return [...new Set(
     (presets || [])
-      .map(p => p.company)
+      .map((p) => p.company)
       .filter(Boolean)
   )].sort((a, b) =>
     a.localeCompare(b, "ru", { sensitivity: "base" })
   );
+}
+
+export async function deleteFoodV2InDB(id) {
+  const { error } = await sb
+    .from("foods_v2")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function setFoodFavoriteV2InDB(id, isFavorite) {
+  const { data, error } = await sb
+    .from("foods_v2")
+    .update({ is_favorite: !!isFavorite })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }

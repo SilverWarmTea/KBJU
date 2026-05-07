@@ -55,6 +55,8 @@ async function init() {
     .map(c => `<option value="${c}">`)
     .join("");
 
+  initTitleAutocomplete();
+
   dom.add?.addEventListener("click", onAdd);
   dom.clear?.addEventListener("click", onClear);
   dom.list?.addEventListener("click", onListClick);
@@ -67,4 +69,113 @@ async function init() {
   }
 
   render();
+}
+
+function initTitleAutocomplete() {
+  if (!dom.title) return;
+
+  const box = document.createElement("div");
+  box.className = "title-autocomplete hidden";
+  dom.title.parentElement.appendChild(box);
+
+  dom.title.addEventListener("input", () => {
+    const q = String(dom.title.value || "").toLowerCase().trim();
+
+    if (q.length < 2) {
+      hideAutocomplete(box);
+      return;
+    }
+
+    const matches = state.presets
+      .filter(p =>
+        String(p.name || "").toLowerCase().includes(q) ||
+        String(p.company || "").toLowerCase().includes(q)
+      )
+      .sort((a, b) => {
+        if (!!a.is_favorite !== !!b.is_favorite) {
+          return a.is_favorite ? -1 : 1;
+        }
+
+        return String(a.name).localeCompare(String(b.name), "ru", {
+          sensitivity: "base"
+        });
+      })
+      .slice(0, 8);
+
+    if (!matches.length) {
+      hideAutocomplete(box);
+      return;
+    }
+
+    box.innerHTML = matches.map((p, i) => `
+      <button
+        type="button"
+        class="title-autocomplete-item"
+        data-preset-idx="${i}"
+      >
+        <span class="tai-name">${p.is_favorite ? "⭐ " : ""}${escapeHtml(p.name)}</span>
+        <span class="tai-meta">
+          ${p.company ? escapeHtml(p.company) + " · " : ""}
+          ${p.calc_mode === "unit" ? "1 шт" : `${p.base_amount || 100} г`}
+          · К ${p.k} Б ${p.b} Ж ${p.j} У ${p.u}
+        </span>
+      </button>
+    `).join("");
+
+    box._matches = matches;
+    box.classList.remove("hidden");
+  });
+
+  box.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+
+    const btn = e.target.closest("[data-preset-idx]");
+    if (!btn) return;
+
+    const idx = Number(btn.dataset.presetIdx);
+    const product = box._matches?.[idx];
+
+    if (!product) return;
+
+    applyProductToEditor(product);
+    hideAutocomplete(box);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (e.target === dom.title || box.contains(e.target)) return;
+    hideAutocomplete(box);
+  });
+}
+
+function applyProductToEditor(p) {
+  dom.title.value = p.name || "";
+  dom.company.value = p.company || "";
+
+  dom.macros.k.value = p.k ?? "";
+  dom.macros.b.value = p.b ?? "";
+  dom.macros.j.value = p.j ?? "";
+  dom.macros.u.value = p.u ?? "";
+
+  if (p.calc_mode === "unit") {
+    setEditorMode("unit");
+    dom.weight.value = "1";
+  } else {
+    setEditorMode("weight");
+    dom.weight.value = String(p.base_amount || 100);
+  }
+}
+
+function hideAutocomplete(box) {
+  box.classList.add("hidden");
+  box.innerHTML = "";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[ch]));
 }
